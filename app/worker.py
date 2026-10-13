@@ -169,7 +169,11 @@ class Worker:
                         subject=('【Oneasy·业务来信】' if notice['kind']=='initial' else '【Oneasy·处理复核】')+item['subject']
                     elif notice['kind']=='report':
                         report=json.loads(self.db.rows('SELECT payload FROM reports WHERE id=?',(payload['report_id'],))[0]['payload'])
-                        text=report_text(report); identity+=':'+str(report.get('revision',0))
+                        if part==0 and payload.get('format')!='mail-only':
+                            payload={**payload,'format':'mail-only'}
+                            with self.db.tx() as db:
+                                db.execute('UPDATE notices SET payload=? WHERE id=?',(json.dumps(payload),notice['id']))
+                        text=report_text(report,legacy=payload.get('format')!='mail-only'); identity+=':'+str(report.get('revision',0))
                         subject='【Oneasy·每日汇总】'+report['day']
                     else:
                         text=payload['text']; subject='【Oneasy·运行提示】'
@@ -214,15 +218,15 @@ class Worker:
                 revision=report.get('revision',0)
                 identity=notice['id']+':'+str(revision)
                 owner_name=report.get('owner_name',people[0]['name'])
-                if part==0 or payload.get('format')=='readable':
-                    if payload.get('format')!='readable':
-                        payload={**payload,'format':'readable'}
-                        with self.db.tx() as db:
-                            db.execute('UPDATE notices SET payload=? WHERE id=?',(json.dumps(payload),notice['id']))
-                    parts=group_report_parts(report,owner_name)
+                if part==0 and payload.get('format')!='mail-only':
+                    payload={**payload,'format':'mail-only'}
+                    with self.db.tx() as db:
+                        db.execute('UPDATE notices SET payload=? WHERE id=?',(json.dumps(payload),notice['id']))
+                if payload.get('format') in {'mail-only','readable'}:
+                    parts=group_report_parts(report,owner_name,legacy=payload['format']=='readable')
                 else:
                     # Finish pre-upgrade fragments using their original boundaries.
-                    parts=message_parts('负责人：'+owner_name+'\n'+report_text(report),identity,limit=2048)
+                    parts=message_parts('负责人：'+owner_name+'\n'+report_text(report,legacy=True),identity,limit=2048)
                 self.db.set('last_send',current.timestamp())
                 attempts+=1
                 userids=[people[0]['userid']] if any(i['category'] in {'action','info','human'} for i in report['items']) else []

@@ -9,7 +9,7 @@ from unittest.mock import patch
 import httpx
 
 from app.core import Mail, Decision
-from app.notifications import message_parts, report_text
+from app.notifications import message_parts, report_text, group_report_parts
 from app.smtp import SMTPSender
 from app.store import Store
 from app.wecom import WeComSender
@@ -88,6 +88,7 @@ class GroupReportsTest(unittest.TestCase):
         self.assertIn('负责人：同事',by_member['Other'])
         self.assertIn('仅李涵业务',by_member['LiHan'])
         self.assertNotIn('仅李涵业务',by_member['Other'])
+        self.assertTrue(all('请在原邮箱处理业务' in text for text in by_member.values()))
         self.assertEqual(self.notice()['channel'],'wecom')
         self.assertTrue(self.db.rows("SELECT 1 FROM audit WHERE action='notification_sent' AND detail LIKE '%wecom%'"))
         self.deliver(500)
@@ -114,23 +115,26 @@ class GroupReportsTest(unittest.TestCase):
         self.assertIn('负责人：李涵',text)
         self.assertEqual(len(self.emails),1)
 
-    def test_report_summarizes_operations_and_keeps_every_email_without_raw_logs(self):
+    def test_report_omits_operations_and_keeps_every_email_without_raw_logs(self):
         self.add('业务复核一'); self.add('业务复核二','partner@oneasy.cc')
         with patch('app.store.now',return_value=at('2026-10-09T13:00')):
             self.db.log('notification_sent',detail={'notice':'internal-notice-id','channel':'wecom','userid':'LiHan'})
             self.db.log('wecom_changed',detail={'enabled':True,'webhook_saved':True})
         self.schedule(); self.finish()
         text=''.join(part['content'].split('\n',1)[1] for part in self.group)
-        for expected in ('业务复核一','业务复核二','待人工复核','系统操作摘要','2026-10-09 18:00','原邮箱'):
+        for expected in ('业务复核一','业务复核二','待人工复核','2026-10-09 18:00','原邮箱'):
             self.assertIn(expected,text)
-        for raw in ('notification_sent','classified','internal-notice-id','webhook_saved','source_id','T18:00','+08:00'):
+        for raw in ('系统操作摘要','完成邮件分类','notification_sent','classified','internal-notice-id','webhook_saved','source_id','T18:00','+08:00'):
             self.assertNotIn(raw,text)
+        self.assertNotIn('操作记录（',self.emails[0][1])
+        self.assertNotIn('internal-notice-id',self.emails[0][1])
+        self.assertTrue(self.db.report('lihan','2026-10-09')['operations'])
         self.assertTrue(self.db.rows("SELECT 1 FROM audit WHERE action='notification_sent' AND detail LIKE '%internal-notice-id%'"))
 
     def test_old_partially_sent_report_keeps_its_existing_fragment_boundaries(self):
         self.add(long=True); self.schedule(); self.deliver(0)
         report=self.db.report('lihan','2026-10-09')
-        legacy=message_parts('负责人：李涵\n'+report_text(report),'report_group:lihan:2026-10-09:0',limit=2048)
+        legacy=message_parts('负责人：李涵\n'+report_text(report,legacy=True),'report_group:lihan:2026-10-09:0',limit=2048)
         with self.db.tx() as db:
             db.execute("UPDATE notices SET part=1 WHERE kind='report_group'")
         self.deliver(4)
@@ -226,6 +230,25 @@ class GroupReportsTest(unittest.TestCase):
         self.schedule(); self.finish()
         self.assertTrue(self.group)
         self.assertTrue(all('mentioned_list' not in part for part in self.group))
+        text=''.join(part['content'] for part in self.group)
+        for value in ('本期新增 0 封','2026-10-09','统计时段'):
+            self.assertIn(value,text)
+        for value in ('系统操作摘要','请在原邮箱处理业务','完整操作记录','以下邮件未即时提醒'):
+            self.assertNotIn(value,text)
+        self.assertEqual(len(self.emails),1)
+        for value in ('操作记录（','请人工检查是否遗漏','本系统不记录工作完成状态'):
+            self.assertNotIn(value,self.emails[0][1])
+        self.assertIn('新增邮件 0 封',self.emails[0][1])
+
+    def test_inflight_readable_report_keeps_pre_upgrade_boundaries(self):
+        self.add(long=True); self.schedule(); self.deliver(0)
+        report=self.db.report('lihan','2026-10-09')
+        old_parts=group_report_parts(report,'李涵',legacy=True)
+        with self.db.tx() as db:
+            db.execute("UPDATE notices SET part=1,payload=? WHERE kind='report_group'",
+                       (json.dumps({'report_id':'lihan:2026-10-09','format':'readable'}),))
+        self.finish(4)
+        self.assertEqual([part['content'] for part in self.group],old_parts[1:])
 
     def test_disabled_group_or_removed_member_cancels_group_and_preserves_original_email(self):
         for case in ('disabled','missing_member'):

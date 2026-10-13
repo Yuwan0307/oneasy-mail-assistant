@@ -34,15 +34,17 @@ def item_text(item):
     return '\n'.join(lines)
 
 
-def report_text(report):
+def report_text(report, legacy=False):
     lines=[f"邮件每日汇总 · {report['day']}",f"记录区间：{report['since']} 至 {report['cutoff']}",
-           f"新增邮件 {len(report['items'])} 封；其中未即时提醒 {len(report['review'])} 封。",
-           '请人工检查是否遗漏有价值的邮件；本系统不记录工作完成状态。']
+           f"新增邮件 {len(report['items'])} 封；其中未即时提醒 {len(report['review'])} 封。"]
+    if report['items'] or legacy:
+        lines.append('请人工检查是否遗漏有价值的邮件；本系统不记录工作完成状态。')
     for account in sorted({i['account'] for i in report['items']}):
         lines.append('\n'+account)
         lines.extend(item_text(i)+'\n' for i in report['items'] if i['account']==account)
-    lines.append(f"\n操作记录（{len(report['operations'])} 条）")
-    lines.extend(f"{a['time']} {a['actor']} {a['action']} {a['item_id']} {a['detail']}" for a in report['operations'])
+    if legacy:
+        lines.append(f"\n操作记录（{len(report['operations'])} 条）")
+        lines.extend(f"{a['time']} {a['actor']} {a['action']} {a['item_id']} {a['detail']}" for a in report['operations'])
     return ('【延迟补发】\n' if report.get('delayed') else '')+'\n'.join(lines)
 
 
@@ -126,7 +128,7 @@ def system_notice_text(code,accounts,detected):
     return '\n'.join(lines)
 
 
-def group_report_text(report,owner_name):
+def group_report_text(report,owner_name,legacy=False):
     items=report['items']; review=[i for i in items if i['category']=='digest']
     business=[i for i in items if i['category']!='digest']
     blocks=[f"负责人：{owner_name}\n统计时段：{display_time(report['since'])} 至 {display_time(report['cutoff'])}（北京时间）\n"
@@ -138,6 +140,10 @@ def group_report_text(report,owner_name):
         blocks.append(heading+f'（{len(group)}封）'+('\n以下邮件未即时提醒，请核对是否遗漏有价值的来信。' if heading=='待人工复核' else ''))
         for index,item in enumerate(group,1):
             blocks.append(f"{index}. {MAILBOXES.get(item['account'],'监管邮箱')} · {labels[item['category']]}\n"+group_item_text(item))
+    if not legacy:
+        if items: blocks.append('请在原邮箱处理业务；未即时提醒的邮件请人工复核。完整操作记录和分类依据可在邮件助手中查看。')
+        return '\n\n'.join(blocks)
+    # Only already-started pre-upgrade reports keep their original fragment boundaries.
     counts=Counter(a['action'] for a in report['operations'])
     groups={
         '完成邮件读取':('read_finished',),'完成邮件分类':('classified',),
@@ -165,8 +171,8 @@ def group_report_text(report,owner_name):
     return '\n\n'.join(blocks)
 
 
-def group_report_parts(report,owner_name):
-    text=group_report_text(report,owner_name)
+def group_report_parts(report,owner_name,legacy=False):
+    text=group_report_text(report,owner_name,legacy=legacy)
     title='每日邮件汇总 · '+report['day']+(' · 更新版' if report.get('revision') else '')
     count=1
     while True:
