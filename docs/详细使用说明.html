@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Oneasy 邮件助手｜逐页使用说明</title>
+  <style>
+    :root{--ink:#26352f;--muted:#67766f;--line:#dfe6e0;--paper:#fff;--canvas:#f6f7f4;--green:#306c50;--green-bg:#edf5ef;--amber:#906415;--amber-bg:#fff7e7;--radius:16px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:28px}body{margin:0;background:var(--canvas);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;line-height:1.85;font-size:15px}a{color:var(--green);text-underline-offset:3px}button{font:inherit;cursor:pointer}a:focus-visible,button:focus-visible{outline:3px solid #a1c3ae;outline-offset:4px}
+    .layout{display:grid;grid-template-columns:258px minmax(0,1040px);max-width:1380px;margin:auto;gap:38px;padding:30px 28px 80px}.toc{position:sticky;top:28px;align-self:start;max-height:calc(100vh - 56px);overflow:auto;padding:10px 12px 24px 0}.brand{font-size:13px;font-weight:750;letter-spacing:3px;color:var(--green)}.toc h2{font-size:18px;margin:10px 0 2px}.toc p{font-size:12px;margin:0 0 18px;color:var(--muted)}.toc a{display:block;text-decoration:none;color:var(--muted);padding:6px 10px;border-radius:7px;font-size:13px;line-height:1.5}.toc a:hover{background:var(--green-bg);color:var(--green)}.toc .group{display:block;font-size:11px;letter-spacing:1px;color:#879189;margin:16px 10px 6px}.document{min-width:0}.cover{padding:42px 42px 34px;background:linear-gradient(135deg,#fff 0%,#f0f6ee 100%);border:1px solid var(--line);border-radius:22px}.eyebrow{font-size:12px;font-weight:700;letter-spacing:2px;color:var(--green)}h1{font-size:36px;line-height:1.35;letter-spacing:-1px;margin:16px 0}h2{font-size:24px;line-height:1.45;margin:0 0 20px;letter-spacing:-.4px}h3{font-size:18px;line-height:1.55;margin:28px 0 12px}h4{font-size:15px;margin:20px 0 8px}.lead{font-size:17px;color:#52665a;max-width:670px}.meta{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0}.tag{display:inline-block;background:#fff9;border:1px solid #dbe5dc;padding:4px 10px;border-radius:20px;font-size:12px;color:#53675b}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}.actions a,.actions button{display:inline-block;border:1px solid #d3ded4;background:#fff;padding:9px 15px;border-radius:9px;text-decoration:none;color:var(--ink);font-size:13px}.actions .primary{background:var(--green);color:#fff;border-color:var(--green)}.section{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:32px 36px;margin-top:22px;scroll-margin-top:25px}.section-num{font-size:12px;color:var(--green);font-weight:700;letter-spacing:1px;margin-bottom:8px}p{margin:10px 0}ul,ol{padding-left:23px;margin:12px 0}li{margin:7px 0}li>p{margin:6px 0}.muted,.caption{color:var(--muted)}.caption{font-size:12px}.callout{border-left:3px solid #82ad90;background:var(--green-bg);border-radius:0 9px 9px 0;padding:14px 18px;margin:19px 0}.callout.warn{border-color:#d0ad60;background:var(--amber-bg);color:#755820}.callout p:first-child{margin-top:0}.callout p:last-child{margin-bottom:0}.path{display:inline-block;border:1px solid var(--line);background:#f7f8f6;border-radius:6px;padding:2px 8px;font-size:12px;overflow-wrap:anywhere}code{font-family:Consolas,monospace;font-size:12px;line-height:1.7;background:#f2f5f1;border-radius:4px;padding:2px 5px;overflow-wrap:anywhere}.table-wrap{overflow-x:auto;margin:16px 0}table{width:100%;border-collapse:collapse;text-align:left;font-size:13px;line-height:1.8}th{font-weight:650;background:#f3f6f1;color:#496151}th,td{border-bottom:1px solid #e6ebe5;padding:12px 13px;vertical-align:top}th:first-child,td:first-child{padding-left:15px}td:first-child{font-weight:550}td{overflow-wrap:anywhere}table.wide{min-width:660px}.key{font-weight:650;color:#234e3b}.demo-button{display:inline-block;border:1px solid #d6dfd5;background:#fff;padding:1px 8px;border-radius:5px;font-size:12px;white-space:nowrap;color:#36563f}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0}.mini{border:1px solid var(--line);border-radius:11px;padding:17px;background:#fafbf9}.mini h3{margin:0 0 8px;font-size:16px}.mini p{font-size:13px;margin:0}.flow{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:20px 0;font-size:13px}.flow span{padding:8px 13px;background:#f1f6ef;border:1px solid #dce7d9;border-radius:8px}.flow b{font-weight:400;color:#90a18e}.ui-map{display:grid;grid-template-columns:150px 1fr;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:20px 0;font-size:12px}.ui-map aside{background:#f4f6f1;padding:16px;line-height:2.15}.ui-map .mock-main{padding:16px;background:#fff}.mock-header{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:16px}.mock-box{border:1px dashed #cfdacf;border-radius:8px;padding:20px;color:#768574;text-align:center}.steps{counter-reset:step;list-style:none;padding:0}.steps>li{position:relative;padding-left:39px;margin:18px 0}.steps>li:before{counter-increment:step;content:counter(step);position:absolute;left:0;top:2px;width:25px;height:25px;border-radius:50%;background:var(--green-bg);color:var(--green);text-align:center;line-height:25px;font-size:12px;font-weight:650}.faq{border-top:1px solid var(--line);padding:16px 0}.faq h3{font-size:16px;margin:0 0 7px}.faq p{font-size:14px}.back{display:block;text-align:right;font-size:12px;margin-top:22px;text-decoration:none}.end{font-size:12px;color:var(--muted);padding:25px 10px;text-align:center}.coverage td:first-child{white-space:nowrap}mark{background:#eaf3e8;color:inherit;padding:1px 4px;border-radius:3px}
+    @media(max-width:1050px){.layout{grid-template-columns:210px minmax(0,1fr);gap:22px;padding:22px 20px 60px}.section{padding:27px}.cover{padding:32px}h1{font-size:31px}}
+    @media(max-width:760px){html{scroll-behavior:auto}.layout{display:block;padding:16px 14px 45px}.toc{position:static;max-height:none;border:1px solid var(--line);padding:18px;background:#fff;border-radius:14px;margin-bottom:16px}.toc nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 6px}.toc .group{grid-column:1/-1;margin:10px 8px 3px}.toc a{font-size:12px;padding:6px 8px}.toc h2{margin-top:6px}.toc p{margin-bottom:8px}.cover,.section{padding:24px 20px}h1{font-size:29px}h2{font-size:21px}.lead{font-size:15px}.grid{grid-template-columns:1fr}.ui-map{grid-template-columns:115px 1fr}.ui-map aside,.ui-map .mock-main{padding:12px}.mock-header{flex-direction:column}.section{margin-top:16px}.table-wrap{margin-left:-4px;margin-right:-4px}}
+    @media print{@page{size:A4;margin:15mm 14mm}html{scroll-behavior:auto}body{background:#fff;color:#222;font-size:10pt;line-height:1.65}.layout{display:block;padding:0;max-width:none}.toc,.actions,.back{display:none!important}.cover{background:#fff;border:0;border-bottom:2px solid #456c52;border-radius:0;padding:0 0 22px;margin-bottom:22px}.section{padding:0;border:0;border-radius:0;margin:24px 0}h1{font-size:25pt}h2{font-size:17pt;break-after:avoid}h3,h4{break-after:avoid}p,li{orphans:3;widows:3}table{font-size:9pt}thead{display:table-header-group}tr,.mini,.callout,.flow,.ui-map{break-inside:avoid}.table-wrap{overflow:visible}table.wide{min-width:0}.tag{border:1px solid #ddd}.callout{background:#f6f7f5!important;print-color-adjust:exact}.callout.warn{background:#faf7f0!important}.grid{gap:10px}.section-num{margin-top:12px}.end{text-align:left}a{color:inherit;text-decoration:none}}
+  </style>
+</head>
+<body>
+<div class="layout" id="top">
+  <aside class="toc" aria-label="说明书目录">
+    <div class="brand">ONEASY / GUIDE</div>
+    <h2>逐页使用说明</h2>
+    <p>点击目录定位 · 全文可离线阅读</p>
+    <nav>
+      <span class="group">先了解，再操作</span>
+      <a href="#scope">01 系统作用与提醒规则</a>
+      <a href="#install">02 交付包与首次打开</a>
+      <a href="#global">03 界面通用控件</a>
+      <span class="group">六个主页面</span>
+      <a href="#overview">04 运行概览</a>
+      <a href="#business">05 业务来信与邮件卡片</a>
+      <a href="#review">06 邮件人工复核</a>
+      <a href="#reports">07 每日汇总及详情</a>
+      <a href="#audit">08 操作记录与导出</a>
+      <a href="#mailboxes">09 邮箱与负责人</a>
+      <span class="group">设置与编辑子页面</span>
+      <a href="#configuration">10 设置总览</a>
+      <a href="#connections">11 更改系统连接</a>
+      <a href="#smtp">12 更改提醒发件箱</a>
+      <a href="#wecom">12A 更改企业微信群提醒</a>
+      <a href="#people">13 负责人管理</a>
+      <a href="#person">14 添加／更改负责人</a>
+      <a href="#mailbox-editor">15 单个邮箱设置</a>
+      <a href="#autosave">16 自动保存与离开页面</a>
+      <span class="group">交接、查错与索引</span>
+      <a href="#workflows">17 常用操作步骤</a>
+      <a href="#troubleshooting">18 常见问题与处理</a>
+      <a href="#acceptance">19 验收范围与维护位置</a>
+      <a href="#button-index">20 全部按钮速查</a>
+    </nav>
+  </aside>
+  <main class="document">
+    <header class="cover">
+      <div class="eyebrow">ONEASY MAIL ASSISTANT / USER MANUAL</div>
+      <h1>Oneasy 邮件助手<br>逐页使用说明</h1>
+      <p class="lead">从首次部署到日常复核，说明每一个页面、按钮和设置项的用途，以及操作之后系统实际会做什么。</p>
+      <div class="meta"><span class="tag">统一交付包 v1.6.3</span><span class="tag">Windows / Mac 共用界面</span><span class="tag">更新：2026-10-13</span><span class="tag">提醒渠道：企业微信内部群＋邮件</span></div>
+      <p class="caption">本说明依据本次交付源码与现有界面编写，统一安装包版本为 v1.6.3。本文中的按钮示例用于说明，不会执行助手操作。</p>
+      <div class="actions"><a class="primary" href="#workflows">查看日常操作步骤</a><a href="#button-index">查找按钮</a><button type="button" id="print-manual">打印／另存为 PDF</button></div>
+    </header>
+
+    <section class="section" id="scope">
+      <div class="section-num">01 / 系统定位</div><h2>系统负责辅助检测，人工负责业务处理</h2>
+      <p>助手持续检查六个指定阿里企业邮箱的新来信，通过规则和 AI 进行分类、生成摘要、提取事项及明确截止时间，再把需要关注的内容发给相关负责人。未即时提醒的邮件进入每日复核和汇总，便于人工发现遗漏。</p>
+      <div class="flow" aria-label="处理流程"><span>客户来信</span><b>→</b><span>规则与 AI 检测</span><b>→</b><span>分类、摘要与记录</span><b>→</b><span>负责人收取提醒／汇总</span><b>→</b><span>人工在原邮箱处理</span></div>
+      <div class="grid"><div class="mini"><h3>系统会做什么</h3><p>检测新邮件、保守转人工、发送内部提醒、形成汇总与操作记录；按每个邮箱的设置维护多人通知关系，支持可选的复核文件夹移动。</p></div><div class="mini"><h3>同事仍然怎么工作</h3><p>正常登录阿里邮箱，阅读原文、查看附件、联系客户和发送回复。助手只提供回复参考要点，当前没有自动回复、领取任务或标记完成流程。</p></div></div>
+      <h3>六个固定监管邮箱</h3>
+      <div class="table-wrap"><table><thead><tr><th>邮箱</th><th>业务用途</th></tr></thead><tbody>
+        <tr><td>service@oneasy.cc</td><td>客户服务和沟通。</td></tr><tr><td>partner@oneasy.cc</td><td>合作伙伴、渠道及生态服务和沟通。</td></tr><tr><td>support@oneasy.cc</td><td>技术支持与售后相关来信。</td></tr><tr><td>noreply@oneasy.cc</td><td>自动发件邮箱收到的客户回信、退信等入站邮件。助手不会代替业务系统用它发客户邮件。</td></tr><tr><td>operation@oneasy.cc</td><td>开通等运营业务及客户相关来信。</td></tr><tr><td>legal@oneasy.cc</td><td>客户法律相关问题及沟通。</td></tr>
+      </tbody></table></div>
+      <h3>提醒种类与时间</h3>
+      <div class="table-wrap"><table class="wide"><thead><tr><th>种类</th><th>触发与时间</th><th>收到后怎么做</th></tr></thead><tbody>
+        <tr><td>业务来信提醒</td><td>业务相关或无法确定的来信，检测后加入即时通知队列；全天运行。邮件主题以 <code>【Oneasy·业务来信】</code> 开头。</td><td>阅读摘要，进入对应原邮箱核对并人工处理。</td></tr>
+        <tr><td>首次处理复核</td><td>“业务请求”“转人工”类：18:00 前收到，当天 18:00 复核一次；18:00 及以后收到，次日 18:00 复核一次。主题以 <code>【Oneasy·处理复核】</code> 开头。</td><td>自行检查是否已经处理；已处理则无需回复助手。</td></tr>
+        <tr><td>截止前复核</td><td>提取到有依据的客户截止时间时，在截止前 1 小时额外复核；与首次复核时间相同则合并。已经错过安排时间、已过期或太晚识别的截止提醒可能跳过。</td><td>再次人工核对进度与原文时间要求。不要只依赖自动识别的截止时间。</td></tr>
+        <tr><td>每日汇总</td><td>每天北京时间 18:00，按负责人归集本期邮件和操作记录，包含未即时提醒邮件。启用群提醒且负责人已填成员账号时，同步发群和原提醒邮箱；否则只发邮件。邮件主题以 <code>【Oneasy·每日汇总】</code> 开头。</td><td>重点人工复核广告、非客户来信等内容是否误判；发现业务邮件后在界面更正。</td></tr>
+        <tr><td>运行提示</td><td>扫描、移动等出现需检查的问题时，可能发送 <code>【Oneasy·运行提示】</code>。</td><td>查看运行概览和操作记录，必要时联系维护人员。</td></tr>
+      </tbody></table></div>
+      <p>以上时间统一按<strong>北京时间</strong>计算。“即时”指发现后尽快排队发送：后台完成一轮扫描后约等待 60 秒再开始下一轮，网络、邮件量、AI 耗时和通知队列都会影响实际到达时间；不保证每封邮件都在固定秒数内提醒。</p>
+      <div class="callout"><p><strong>当前为单向提醒。</strong>系统不知道负责人是否已完成业务，因此没有完成率统计，也不会根据“未完成”状态每天反复催办历史邮件。每天汇总按记录区间归集；负责人不需要回执或点击“已完成”。</p></div>
+      <h3>企业微信群提醒与每日完整汇总</h3>
+      <h3 id="system-alerts">运行提醒是什么意思，为什么会合并（v1.6.3）</h3>
+      <p>“邮箱扫描未成功”表示助手的一次扫描未完成，可能延迟新邮件检测，不等于邮箱本身故障、邮件丢失或 AI 删除了邮件。助手会在后续轮询中自动重试，人员仍可正常登录原邮箱处理业务。</p>
+      <p>一轮扫描结束后，同类的待发运行异常合并为一条群提醒，列出所有受影响邮箱并统一 @ 当前负责人。同一邮箱、同类异常、同一负责人当天不重复新建提醒；新的受影响邮箱或其他类型异常仍会提醒，跨日持续异常可再次提醒。逐邮箱详情保留在“操作记录”。普通客户来信提醒不等待这次合并。</p>
+      <p>群发送失败时，同一负责人只收到一封包含其负责邮箱的合并邮件；没有企业微信成员账号的负责人也使用这种合并邮件。负责人发生变化后按当前分工核对接收范围。暂停时不发送，恢复后继续；重启保留去重及重试记录。</p>
+      <p>群内“发现时间”表示首次产生这批待发提醒的时间，不代表故障一直持续。是否恢复请查看运行概览中各邮箱最近成功扫描时间；若长期不更新，可联系管理员检查网络或邮箱连接配置。后续扫描异常会记录安全的错误类型和适用的 HTTP 状态，帮助排查，不记录访问密钥或原始错误响应。</p>
+      <h3 id="group-message-format">群消息怎么读（v1.6.2）</h3>
+      <p>即时提醒突出主题和事项；处理复核提醒使用“请核对这封邮件是否已处理；已处理可忽略此提醒”。收信和截止时间显示为“2026-10-12 10:06”一类的北京时间，回复建议逐条列出。</p>
+      <p>日报按“本期概况、业务来信、待人工复核、系统操作摘要”阅读。所有邮件的主题、摘要、来源和建议仍在清单中；冗长分类依据、内部编号、英文事件名和原始 JSON 不在群内展示，完整记录继续保存在助手中。操作次数代表系统记录，不代表负责人已经完成业务。</p>
+      <p>长日报优先按段落、行和句子分条；标题显示日期及“第1/2条”等页序。同一天同一负责人的全部分条一起阅读；有“更新版”时表示负责人分工等变化后重新整理。极长的一句话仍可能跨条，请接着下一条阅读。升级时正在发送的旧格式日报会按原进度发完，之后的新消息使用新格式。</p>
+      <div class="callout"><p><strong>【处理复核】</strong><br>请核对这封邮件是否已处理；已处理可忽略此提醒。</p><p>主题：客户开通咨询<br>邮箱：service@oneasy.cc<br>收信时间：2026-10-12 10:06（北京时间）<br>事项：客户希望开通试用账号，需要了解资料清单、试用期限及办理流程。</p><p>建议处理（供参考）：<br>• 确认开通所需资料<br>• 说明试用期限和办理流程</p><p>请登录原邮箱查看和处理。</p></div>
+
+      <p>v1.6 可通过官方企业微信内部群机器人 Webhook 发送业务来信、首次处理复核、截止前复核及运行提示。启用后，同一提醒合并为一条群消息并 @ 已配置企业微信成员账号的当前负责人；成员账号为空的负责人直接接收邮件，群接口报错或网络失败时改用原 SMTP 邮件提醒。未启用群提醒时继续使用邮件。</p>
+      <p>v1.6.1 每日完整汇总及未即时提醒邮件的人工复核内容按负责人归集；启用群提醒且负责人已填成员账号时，同步发企业微信群和原提醒邮箱，群内 @ 该报告负责人；否则只发邮件。长内容编号分条发送，不截断。提醒邮箱和 SMTP 配置仍必需。群内全体成员都可见提醒和汇总内容，@ 只选择提醒对象；只使用获授权的公司内部群，既有敏感信息不送 AI、通知遮蔽和保守转人工规则继续适用。</p>
+      <p>该方式不需要 CorpID、AgentID、自建应用 Secret、客户端可信 IP、可信域名或消息回调。系统只有单向提醒，没有入站消息回调、领取或完成交互，不自动回复或删除客户邮件；个人微信未接入。邮件若要触发企业微信新邮件提示，仍需接入收件邮箱并开启通知。手机和电脑的弹出效果还取决于企业微信及操作系统通知设置。</p>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+
+    <section class="section" id="install">
+      <div class="section-num">02 / 首次拿到交付包</div><h2>部署入口与第一次打开</h2>
+      <p>解压 <strong>Oneasy邮件助手.zip</strong>，保留整个文件夹结构。外层是 <strong>部署邮件助手.html</strong>，内层 <strong>安装资源</strong>包含程序、脚本、运行环境、依赖、文档和测试代码。</p>
+      <h3>统一部署页面的控件</h3>
+      <div class="table-wrap"><table><thead><tr><th>页面内容／控件</th><th>作用</th></tr></thead><tbody>
+        <tr><td>当前系统：Windows / Mac</td><td>根据打开页面的设备识别系统，只决定显示哪套安装说明。</td></tr>
+        <tr><td>选择系统</td><td>下拉项为“请选择”“Windows”“Mac”。识别错误时手动选择，切换安装文件名、支持版本和授权说明。</td></tr>
+        <tr><td>部署邮件助手.cmd</td><td>Windows 的安装文件名提示。回到文件资源管理器中的“安装资源”，实际双击该文件并允许管理员授权。</td></tr>
+        <tr><td>部署邮件助手.command</td><td>Mac 的安装文件名提示。回到 Finder 的“安装资源”，双击该文件并按提示提供本机管理员授权。</td></tr>
+        <tr><td>Mac 验收提示</td><td>提醒 Mac 版本仍需要在真实设备上确认安装、后台运行和开机恢复。</td></tr>
+      </tbody></table></div>
+      <p>部署 HTML 本身是指引页，<strong>不会自动执行安装程序</strong>，文件名也不是一键启动按钮。不要只复制脚本、从压缩包预览运行，或把文本预览当成执行结果。</p>
+      <div class="grid"><div class="mini"><h3>Windows</h3><p>适用 Windows 10/11 x64。部署成功后使用桌面“Oneasy 邮件助手”入口，后台随系统启动。默认安装目录为 <code>C:\ProgramData\Oneasy\MailAssistant</code>。</p></div><div class="mini"><h3>Mac</h3><p>适用 macOS 12 或更新系统，含 Intel / Apple 芯片依赖。部署成功后从“应用程序”打开。默认目录为 <code>/Library/Application Support/Oneasy/MailAssistant</code>。</p></div></div>
+      <h3>新同事接手时，先区分两种情况</h3>
+      <ol>
+        <li><strong>继续使用原监控电脑：</strong>直接打开助手，检查扫描时间及负责人。现有连接设置保存在本机，不需要每换一名同事重新输入密钥；负责人变更按后文操作。</li>
+        <li><strong>更换监控电脑／全新安装：</strong>交付包没有嵌入公司密钥、授权码或历史记录。管理员需要在新机完成一次连接配置，再维护负责人、测试投递并启用。不同电脑不会自动同步配置和记录，Windows 的本机加密配置不能直接复制给 Mac 解密。</li>
+      </ol>
+      <div class="callout warn"><p><strong>同一组邮箱只在一台电脑启用监控。</strong>多台电脑同时启用会各自发送提醒。关闭界面窗口后后台继续；关机、休眠、断网会影响及时检测。迁移时先安排人工核对切换期间来信。</p></div>
+      <p>管理界面地址为 <code>http://127.0.0.1:8765/</code>，仅在实际运行后台的电脑本机可访问。负责人可以在其他电脑或手机通过企业微信内部群及邮箱收取提醒；这不要求其他电脑安装助手。</p>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+
+    <section class="section" id="global">
+      <div class="section-num">03 / 通用界面</div><h2>侧栏、顶栏、状态与通用按钮</h2>
+      <div class="ui-map" aria-label="工作台布局示意"><aside><strong>Oneasy</strong><br>运行概览<br>业务来信<br>邮件人工复核<br>每日汇总<br>操作记录<br>邮箱与负责人<br><br><span class="muted">监控状态 / 版本</span></aside><div class="mock-main"><div class="mock-header"><strong>当前页面标题</strong><span>刷新数据　设置　■ / ○　↓　×</span></div><div class="mock-box">当前页面内容、邮件卡片或编辑表单</div><p class="caption">页脚：北京时间 · 不自动回复邮件 · 所有操作记录可追溯</p></div></div>
+      <p class="caption">上图为位置示意，不是可操作的系统界面截图。</p>
+      <div class="table-wrap"><table class="wide"><thead><tr><th>控件</th><th>功能与结果</th><th>容易混淆的地方</th></tr></thead><tbody>
+        <tr><td>左侧六个导航按钮</td><td>切换到对应主页面。切换页面会从后台重新读取数据，并将列表分页回到第一页。</td><td>点击已经打开的同一个导航项通常不会重新加载。需要更新时点“刷新数据”。</td></tr>
+        <tr><td>刷新数据</td><td>重新读取当前页面已有数据。若正在编辑设置，会先尝试保存，保存失败则留在原页。</td><td>不强制立即扫描邮箱，不重发提醒，不手动生成日报，也不重启后台。</td></tr>
+        <tr><td>设置</td><td>进入独立的设置总览，维护系统连接、提醒发件箱、企业微信群提醒和负责人。</td><td>与左侧“邮箱与负责人”不同：后者主要维护每个邮箱的分配关系。</td></tr>
+        <tr><td>← 返回 / ← 返回设置</td><td>在编辑或管理子页面出现，返回其上一级。若有未保存修改，先尝试保存。</td><td>不是撤销按钮，已经自动保存的改动不会因返回而撤销。</td></tr>
+        <tr><td>短暂浮动提示</td><td>显示操作成功或失败原因，通常约 3 秒后自动消失。</td><td>“操作已记录”表示请求登记成功；异步恢复邮件是否成功还需核对。</td></tr>
+      </tbody></table></div>
+      <h3>右上角三个运行控制图标</h3>
+      <div class="table-wrap"><table class="wide"><thead><tr><th>图标／提示</th><th>点击后的效果</th><th>注意事项</th></tr></thead><tbody>
+        <tr><td>■ 暂停监控 / ○ 恢复监控</td><td>运行时显示方形；点击后暂停自动检测、AI 分析、移动、提醒和汇总调度，图标切换为圆形；再点击恢复。恢复后补查仍在监管范围内的来信，原启用时间不变。</td><td>暂停持久保存，不会因为重启自动解除。已在途的读取／发送可能完成，已经发出的邮件不能撤回；暂停后管理页仍可用。</td></tr>
+        <tr><td>↓ 隐藏到后台</td><td>请求关闭独立客户端窗口，后台保持原运行或暂停状态；再次从桌面入口打开即可查看。</td><td>这不是托盘功能。若使用默认浏览器回退且窗口未能自动关闭，可点击窗口自带的×。</td></tr>
+        <tr><td>× 完全退出</td><td>先弹出确认，再通过本机桌面程序正规停止后台服务并关闭专用客户端窗口，配置与记录保留。</td><td>退出后停止检测和通知。下次开机或再次打开客户端可重新启动后台；此前若已暂停，仍需主动恢复监控。</td></tr>
+      </tbody></table></div>
+      <p>先将鼠标停在图标上查看文字提示。当前页面有未保存设置时，这三个操作均先尝试保存；保存失败留在原页，不执行控制。操作期间按钮暂时禁用，避免重复请求。</p>
+      <div class="callout warn"><p><strong>区分两个×：</strong>界面内部的×是“完全退出”，会停止后台；窗口标题栏自带的×只关界面、后台继续。第一次使用隐藏／退出时，浏览器可能询问是否打开“Oneasy 邮件助手”，应允许本机助手处理。Windows 停止／启动服务以及 Mac 停止／加载服务可能要求管理员授权；取消授权时后台不会被当成已退出。</p></div>
+      <p>隐藏和退出仅在安装后的桌面环境提供原生控制。直接从浏览器访问时，隐藏可能需要手动关窗口；没有部署桌面控制的演示／开发环境不能用“完全退出”停止服务。操作凭证只对当次按钮请求短期有效，过期时重新点击即可，不需要手工填写。</p>
+      <h3>侧栏状态怎么看</h3>
+      <div class="table-wrap"><table><thead><tr><th>状态</th><th>含义与下一步</th></tr></thead><tbody>
+        <tr><td>正在连接后台</td><td>页面初次加载，等待本机服务响应。</td></tr>
+        <tr><td>等待启用监控</td><td>正式模式尚未记录启用时间，需完成配置后在“邮箱与负责人”启用。</td></tr>
+        <tr><td>监控已暂停</td><td>暂停自动检测、AI 分析、移动、提醒和汇总调度；管理页面仍能查看和修改设置。右上角圆形图标用于恢复，顶部有醒目暂停提示。</td></tr>
+        <tr><td>监控已启用</td><td>已完成启用，状态点变绿。表示已启用，并不证明每次阿里邮箱、AI、企业微信群或 SMTP 外部请求都成功；还应看“最近扫描”和“操作记录”。</td></tr>
+        <tr><td>演示工作空间</td><td>展示构造样例，没有连接真实邮箱、AI、企业微信群或提醒发件箱。顶部有演示横幅，配置输入及测试、移除、启用操作被禁用。</td></tr>
+        <tr><td>后台连接中断</td><td>页面无法取得本机后台状态，检查服务是否运行，再刷新。不能仅凭旧页面内容判断后台仍正常。</td></tr>
+      </tbody></table></div>
+      <p>页面不是实时自动滚动更新的监控屏。新邮件已被后台检测时，旧窗口仍可能显示旧内容，使用“刷新数据”查看最新记录。暂停状态会持久保存；关闭窗口或重启服务后，需主动点击“恢复监控”才继续自动处理。</p>
+      <p>当前版本已取消管理访问码。配置和密钥存于后台的本机数据目录，编辑页不回显原密钥；普通工作页不展开系统配置。</p>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+
+    <section class="section" id="overview">
+      <div class="section-num">04 / 主页面一</div><h2>运行概览</h2>
+      <p><span class="path">左侧 → 运行概览</span> 用于快速判断监控是否启用、每个邮箱最近是否扫描，并了解记录总量及提醒安排。</p>
+      <h3>三个统计卡片</h3>
+      <div class="table-wrap"><table><thead><tr><th>名称</th><th>统计口径</th></tr></thead><tbody>
+        <tr><td>监管邮箱</td><td>显示固定范围的 6 个邮箱。数字 6 不是“刚刚全部连接成功”的数量。</td></tr>
+        <tr><td>业务来信</td><td>已记录的“业务请求”“转人工”“信息通知”合计。页面明确说明“单向提醒，不跟踪人工完成状态”。</td></tr>
+        <tr><td>每日复核邮件</td><td>已记录的全部“每日复核”分类邮件数量，包括历史记录；不是今天未读或尚未处理的数量。</td></tr>
+      </tbody></table></div>
+      <p>统计卡片只用于显示，当前没有点击下钻、日期筛选或完成率功能。</p>
+      <h3>邮箱监控状态表</h3>
+      <div class="table-wrap"><table><thead><tr><th>列</th><th>说明</th></tr></thead><tbody>
+        <tr><td>邮箱</td><td>六个监控账号，不是提醒发件箱或负责人收件地址。</td></tr><tr><td>业务用途</td><td>该邮箱对应的工作范围。</td></tr><tr><td>负责人</td><td>当前分配的负责人姓名，多人以顿号连接。</td></tr><tr><td>最近扫描</td><td>后台成功完成该邮箱本轮扫描后记录的时间；<code>—</code> 表示尚无成功扫描时间。若时间持续不更新，去操作记录检查。</td></tr>
+      </tbody></table></div>
+      <h3>提醒安排</h3><p>固定说明即时提醒、首次 18:00 复核、截止前 1 小时复核，以及敏感信息／未完整检查的附件转人工规则。这里没有时间编辑控件。</p>
+      <p><strong>本页按钮：</strong>使用通用的“刷新数据”“设置”、右上角运行控制图标和左侧导航；没有“立即扫描”按钮。</p>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+
+    <section class="section" id="business">
+      <div class="section-num">05 / 主页面二</div><h2>业务来信与通用邮件卡片</h2>
+      <p><span class="path">左侧 → 业务来信</span> 展示需要及时关注的业务相关记录，包含“业务请求”“转人工”“信息通知”。按接收时间从新到旧排列，每页 30 条。</p>
+      <h3>分类标签含义</h3>
+      <div class="table-wrap"><table class="wide"><thead><tr><th>标签</th><th>表示什么</th><th>所在页面／通知安排</th></tr></thead><tbody>
+        <tr><td>业务请求</td><td>存在明确客户事项、请求或需要关注的业务内容。</td><td>业务来信；即时提醒，并安排首次处理复核，有明确有效截止时间时可额外复核。</td></tr>
+        <tr><td>转人工</td><td>涉及敏感信息、无法完整检查附件、读取／AI 失败、判断不确定等，需要负责人查看原邮件。</td><td>业务来信；保守即时提醒，并安排首次处理复核。它不会因为名字里有“人工”而进入“邮件人工复核”页。</td></tr>
+        <tr><td>信息通知</td><td>有业务价值，但未识别到明确需要处理的请求。</td><td>业务来信；即时提醒，当前不安排固定的首次处理复核。</td></tr>
+        <tr><td>每日复核</td><td>被高置信度判断为非即时提醒内容，如广告、一般非客户来信等。</td><td>邮件人工复核；纳入每日汇总，供人工复核。不会仅因某个官方发件地址就一律忽略：账单、安全、退信等重要通知仍可能即时提醒。</td></tr>
+      </tbody></table></div>
+      <h3>每张邮件卡片的字段</h3>
+      <div class="table-wrap"><table><thead><tr><th>字段</th><th>功能与阅读方式</th></tr></thead><tbody>
+        <tr><td>顶部邮箱账号</td><td>邮件进入哪个监管邮箱。先依据该账号确定去哪里查看原文。</td></tr><tr><td>分类标签</td><td>当前判断结果，按上表理解；不是业务完成状态。</td></tr><tr><td>主题</td><td>原邮件主题；缺失时显示“无主题”。敏感或未完整检查内容可能使用通用标题。</td></tr><tr><td>摘要</td><td>对邮件内容和关注事项的简要说明，不代替原文。</td></tr><tr><td>发件人</td><td>来信地址；敏感转人工场景可能显示“请在原邮箱查看”等通用信息。</td></tr><tr><td>接收时间</td><td>邮件的接收时间，按北京时间展示。</td></tr><tr><td>判断依据</td><td>为什么被判为该分类，供人工判断是否合理。</td></tr><tr><td>客户截止时间</td><td>仅在系统提取到时间时显示，附带界面提供的证据文本。若没有这一行，不代表原文一定没有时间要求。</td></tr><tr><td>回复参考要点</td><td>仅在有参考内容时显示。供人工组织话术；系统不会据此自动向客户发送回复。</td></tr>
+      </tbody></table></div>
+      <div class="callout"><p><strong>关于 IP、网络配置和访问凭证：</strong>系统先做本地规则检查，相关邮件会保守转人工。无法完整检查的附件（也可能包含内嵌图片、签名图片）同样可能转人工；界面隐藏部分原始信息属于这一策略，需回原邮箱核对。</p></div>
+      <h3>卡片底部按钮</h3>
+      <div class="table-wrap"><table class="wide"><thead><tr><th>按钮</th><th>出现条件</th><th>点击后的实际效果</th></tr></thead><tbody>
+        <tr><td>打开原邮箱处理</td><td>所有邮件卡片。</td><td>在新标签页打开阿里邮箱入口 <code>https://qiye.aliyun.com</code>。按需登录对应账号，再通过主题、发件人和时间查找邮件；不是直接定位到该封邮件，也不会代为回复。</td></tr>
+        <tr><td>恢复原位置</td><td>系统记录的当前文件夹与原文件夹不同。</td><td>登记人工恢复请求，后台异步恢复并记录结果。不会把分类自动改成“业务请求”，也不会因此新增业务提醒。</td></tr>
+        <tr><td>更正为业务邮件</td><td>仅“每日复核”分类；通常在复核页或汇总详情看到。</td><td>详见下一节。更正为业务请求，安排负责人提醒；若已移走，同步安排恢复。</td></tr>
+      </tbody></table></div>
+      <h3>分页、空状态与边界</h3>
+      <p>底部显示“共 N 条记录 · 当前第 N 页”。“上一页”返回前 30 条，“下一页”查看后 30 条；第一页禁用上一页，最后一页禁用下一页。没有记录时显示“暂无业务来信”，分页显示第 1 页。</p>
+      <p>当前界面没有邮件搜索、按邮箱筛选、附件预览、全文展开、领取、完成或删除按钮。需要查找全文和处理结果，请使用原邮箱。</p>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+
+    <section class="section" id="review">
+      <div class="section-num">06 / 主页面三</div><h2>邮件人工复核</h2>
+      <p><span class="path">左侧 → 邮件人工复核</span> 这里展示所有“每日复核”分类，即未即时提醒邮件，供负责人检查是否漏掉有价值的业务来信。卡片字段与业务页相同，按接收时间倒序，每页 30 条。</p>
+      <h3>更正为业务邮件</h3>
+      <ol class="steps"><li>根据主题、摘要和判断依据初筛；必要时先点<strong>打开原邮箱处理</strong>阅读原文。</li><li>确认属于客户业务内容后，点<strong>更正为业务邮件</strong>。</li><li>系统改为“业务请求”，保留原记录并追加操作记录，同时为该邮件当前各负责人安排新的即时提醒；旧版本尚未发送的提醒取消。</li><li>更正后邮件进入“业务来信”，通常从本页消失。若此前被移到复核文件夹，后台还会安排恢复原位置；以原邮箱和操作记录的实际结果为准。</li></ol>
+      <h3>恢复原位置</h3><p>只在邮件已被移动时出现。用于认可当前分类、但希望邮件回到原文件夹的情况。单独恢复不会更正分类，也不会触发新的业务提醒；成功登记后该邮件被视为已人工复核，避免再次按未复核邮件自动移走。</p>
+      <div class="callout warn"><p><strong>“操作已记录”不是“已经恢复完成”。</strong>移动／恢复由后台执行和确认。恢复按钮暂时仍显示、或出现 <code>move_or_restore_failed</code> 时，应检查原邮箱实际位置，避免反复点击。</p></div>
+      <p>没有记录时显示<strong>暂无非即时提醒邮件</strong>。本页没有“全部确认”“批量忽略”或普通“已复核”按钮；人工阅读本身不会自动移除卡片。恢复后若分类仍为“每日复核”，记录仍可能保留在本页。</p>
+      <p>人工更正会保存操作历史，但当前版本没有利用更正自动训练模型或自建学习规则的功能。</p>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+
+    <section class="section" id="reports">
+      <div class="section-num">07 / 主页面四及其详情</div><h2>每日汇总</h2>
+      <p><span class="path">左侧 → 每日汇总</span> 列表标题为“每天 18:00 汇总 · 按负责人归集”。每份汇总是一个<strong>日期 · 负责人姓名</strong>按钮，例如“2026-10-10 · 李涵”，点击查看该负责人当天的汇总详情。</p>
+      <h3>列表页面</h3>
+      <ul><li>按日期从新到旧显示，每名负责人分别归集其分配邮箱的内容；同一邮箱有多位负责人时，各负责人会有相应汇总。</li><li>没有生成记录时显示“日报生成后将在这里显示。”；当前没有手动生成、手动发送、日期选择或分页按钮。</li><li>被移除负责人的历史汇总仍可保留；名称无法找到时，按钮可能显示内部负责人标识。</li></ul>
+      <h3>汇总详情页的内容</h3>
+      <div class="table-wrap"><table><thead><tr><th>内容</th><th>说明</th></tr></thead><tbody>
+        <tr><td>日期 + 每日汇总</td><td>当前查看的汇总日期。</td></tr><tr><td>本期邮件 X 封</td><td>该负责人本次汇总区间内纳入的全部邮件记录。</td></tr><tr><td>其中未即时提醒 Y 封</td><td>其中“每日复核”分类的数量，用于优先人工复核。</td></tr><tr><td>操作 Z 条</td><td>这次汇总纳入的操作记录条数，不是业务完成数量。</td></tr><tr><td>按监管邮箱分组的邮件卡片</td><td>展示主题、摘要、来源、依据等，并按条件显示“更正为业务邮件”“恢复原位置”“打开原邮箱处理”，功能与前两节一致。</td></tr><tr><td>本期操作汇总</td><td>表格列为“时间”“操作”“详情”，便于追溯本期系统与人工操作。</td></tr>
+      </tbody></table></div>
+      <p>详情明确写着<strong>供人工查阅，不需要确认或标记完成。</strong>汇总是生成时保存的内容，可能与邮件最新分类不同；不是实时待办列表。每天北京时间 18:00，按负责人归集的完整汇总及未即时提醒内容同步发企业微信群和原提醒邮箱，群内 @ 该报告负责人；未启用群提醒或负责人未填成员账号时只发邮件。长内容按编号分条，需一起阅读，不截断；群内全体成员均可见内容，敏感信息仍按原规则遮蔽。</p>
+      <h3>怎样返回汇总列表</h3><p>详情页没有独立“返回”按钮。点击顶栏<strong>刷新数据</strong>即可回到列表；也可以先切到其他主页面再回“每日汇总”。再次点击已经选中的“每日汇总”导航不会触发重新加载。详情内更正／恢复成功后，也会重新加载为汇总列表。</p>
+      <div class="callout"><p>页面已有汇总，只表示汇总已生成；群与 SMTP 分别记录进度，发送结果请查看操作记录。群失败重试当前未成功分片，重启后继续，不重复补发已成功的邮件；群分片间隔 4 秒，即时提醒优先。是否在群内完整显示、正确 @、进入收件箱及出现设备提示仍需负责人实际核对。断网、停机或队列积压时可能延迟补发。</p></div>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+
+    <section class="section" id="audit">
+      <div class="section-num">08 / 主页面五</div><h2>操作记录与完整台账导出</h2>
+      <p><span class="path">左侧 → 操作记录</span> 显示“追加式操作记录”，最新在前，每页 50 条。主要用于核对检测、分类、提醒投递、设置变更、更正及移动结果。</p>
+      <div class="table-wrap"><table><thead><tr><th>列</th><th>含义</th></tr></thead><tbody>
+        <tr><td>时间</td><td>该条操作记录的北京时间。</td></tr><tr><td>操作者</td><td>系统或管理操作使用的内部标识，不代表每名使用者均有独立登录账号。</td></tr><tr><td>操作</td><td>后台事件代码，如 <code>notification_sent</code>；目前界面保留代码形式。</td></tr><tr><td>对象 / 详情</td><td>邮件内部标识或“系统”，以及 JSON 格式的附加信息，用于定位邮箱、收件人或操作版本。</td></tr>
+      </tbody></table></div>
+      <h3>导出完整台账</h3><p>点击<strong>导出完整台账</strong>，浏览器会下载 <code>oneasy-ledger.json</code>，位置由浏览器下载设置决定。包括邮件记录、操作记录、汇总、提醒队列、邮箱、负责人及关联关系；导出行为本身也会追加记录。</p>
+      <p>导出文件适合交接、复核和技术排查，不是 Excel 或 CSV。它不包含完整原邮件正文、附件或系统连接密钥，也不是能够一键恢复整个安装的完整备份；当前没有“导入台账”按钮。文件含业务摘要和负责人信息，按公司内部资料管理。</p>
+      <h3>常见事件代码速查</h3>
+      <div class="table-wrap"><table><thead><tr><th>代码</th><th>一般含义／检查方法</th></tr></thead><tbody>
+        <tr><td><code>read_started</code> / <code>read_finished</code></td><td>开始／结束读取新邮件记录。</td></tr><tr><td><code>notification_attempt</code></td><td>发起某次提醒发送尝试；还不能据此判断发送成功。</td></tr><tr><td><code>notification_sent</code></td><td>提醒已获群接口接受或完成向 SMTP 服务提交，查看详情中的渠道；仍需实际核对群、收件箱及终端提示。</td></tr><tr><td><code>notification_pending</code></td><td>仍有待发送内容，长汇总可能还有后续分段。</td></tr><tr><td><code>notification_failed</code></td><td>本次发送失败，系统按重试策略后续重试；核对详情中的渠道、群配置、发件设置、授权码及网络。</td></tr><tr><td><code>notification_fallback</code></td><td>群发送失败或负责人缺少成员账号，改用 SMTP 邮件；核对详情中的原因和后续邮件发送结果。</td></tr><tr><td><code>notification_cancelled</code></td><td>负责人／邮件版本已变化、截止已过等原因使该条通知不再发送。</td></tr><tr><td><code>review_needs_action</code> / <code>admin_action</code></td><td>登记人工更正业务邮件／管理操作。</td></tr><tr><td><code>review_restore</code></td><td>登记人工恢复请求；还需查看恢复结果。</td></tr><tr><td><code>move_started</code> / <code>moved</code></td><td>开始移动／后台确认移动完成。</td></tr><tr><td><code>restore_started</code> / <code>restored</code></td><td>开始恢复／后台确认恢复完成。</td></tr><tr><td><code>move_or_restore_failed</code></td><td>移动或恢复未能确认，去原邮箱检查实际位置并联系维护人员。</td></tr><tr><td><code>report_created</code> / <code>report_rebuilt</code></td><td>汇总生成／负责人关系变化后重建尚未发送的汇总。</td></tr>        <tr><td><code>monitoring_paused</code> / <code>monitoring_resumed</code></td><td>人工暂停／恢复监控，状态持久保存。</td></tr><tr><td><code>desktop_hide_requested</code> / <code>desktop_exit_requested</code></td><td>客户端发起隐藏／退出请求；还不能据此断定系统授权与退出已完成。</td></tr><tr><td><code>desktop_hide_accepted</code> / <code>desktop_exit_accepted</code></td><td>本机桌面程序已兑换当次控制凭证，后续执行关闭窗口或停止后台。</td></tr>
+<tr><td><code>person_changed</code> / <code>person_removed</code></td><td>负责人信息保存／负责人移除。</td></tr><tr><td><code>owners_changed</code> / <code>mailbox_changed</code></td><td>邮箱负责人分配／文件夹或移动设置变化。</td></tr><tr><td><code>connections_changed</code> / <code>smtp_changed</code> / <code>wecom_changed</code></td><td>系统连接／提醒发件箱／群提醒设置保存，不等于外部连接测试已通过。</td></tr><tr><td><code>binding_test_started</code> / <code>binding_test_failed</code></td><td>负责人提醒测试开始／失败。</td></tr><tr><td><code>mailbox_scan_failed</code> / <code>missing_received_time</code></td><td>某邮箱扫描失败／邮件接收时间缺失，需要核对邮箱接入。</td></tr><tr><td><code>expired_deadline_skipped</code> / <code>reminder_merged</code></td><td>错过有效截止提醒窗口而跳过／同一时间的复核提醒合并。</td></tr><tr><td><code>own_notification_skipped</code></td><td>识别到助手自身发出的通知并跳过，避免通知循环。</td></tr><tr><td><code>ledger_exported</code></td><td>执行过完整台账导出。</td></tr><tr><td><code>worker_tick_failed</code> / <code>notification_loop_failed</code></td><td>后台扫描调度／通知循环发生异常，需要维护人员检查日志。</td></tr>
+      </tbody></table></div>
+      <p>底部<strong>上一页／下一页</strong>每次切换 50 条，首尾禁用。没有记录时只显示表头；本页不提供记录编辑、删除、筛选或“手动重发”按钮。</p>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+
+    <section class="section" id="mailboxes">
+      <div class="section-num">09 / 主页面六</div><h2>邮箱与负责人</h2>
+      <p><span class="path">左侧 → 邮箱与负责人</span> 用于查看六个邮箱的负责人关系，以及首次完成接入检查并启用。这个页面不直接展开连接密钥、群 Webhook 或负责人编辑表单。</p>
+      <h3>监管邮箱与负责人</h3><p>表格列为“邮箱”“业务用途”“负责人”“操作”。每行<strong>更改</strong>打开该邮箱的独立设置页，可多选负责人、选择监控文件夹及调整复核邮件移动开关。</p>
+      <h3>负责人及接收提醒的邮箱</h3><p>显示“已有 N 位负责人。具体信息在管理页维护。”点击<strong>管理负责人</strong>进入负责人管理页，查看并维护姓名、接收提醒地址、可选企业微信成员账号及分配情况。</p>
+      <h3>监控状态</h3>
+      <div class="table-wrap"><table><thead><tr><th>当前情况</th><th>显示与操作</th></tr></thead><tbody>
+        <tr><td>尚未启用</td><td>显示“尚未启用：仅处理启用后收到的新邮件。”以及<strong>完成接入检查并启用</strong>按钮。</td></tr><tr><td>已经启用</td><td>显示“已启用 · 启用时间”。启用按钮不再出现；暂停／恢复使用右上角图标。此处不提供重置启用时间或重复启用。</td></tr><tr><td>演示模式</td><td>启用操作禁用，不会实际连接邮箱。</td></tr>
+      </tbody></table></div>
+      <h3>完成接入检查并启用：会检查什么</h3>
+      <ol><li>已配置阿里邮箱应用和提醒发件箱。</li><li>每个监管邮箱至少有一位有效负责人，并且有有效提醒邮箱地址。</li><li>调用六个邮箱的文件夹接口检查访问权限。</li><li>通过后记录当前启用时间，提示“已启用新邮件监控”，后台开始处理启用时间之后收到的新邮件。</li></ol>
+      <p>该按钮本身不发送连接测试邮件，也不补扫启用之前的历史来信。启用后正常来信提醒和定时汇总可能随后发出。当前启用检查不强制要求 AI 已配置、也不强制要求先发测试邮件；实际使用前仍建议把 AI 和投递验证完成。没有 AI 或 AI 异常时，会采用保守转人工策略。</p>
+      <p>遇到“接入检查失败，请按管理员清单核对权限”时，先检查应用权限和六个邮箱授权。看到启用时间后，应回到运行概览，刷新并核对各邮箱最近扫描时间。</p>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+
+    <section class="section" id="configuration">
+      <div class="section-num">10 / 设置总览</div><h2>设置</h2>
+      <p><span class="path">右上角 → 设置</span> 显示四个入口卡片，日常页面不展开的连接信息在这里维护。</p>
+      <div class="table-wrap"><table><thead><tr><th>卡片</th><th>显示内容</th><th>按钮及去向</th></tr></thead><tbody>
+        <tr><td>系统连接</td><td>阿里邮箱：已配置／待配置；AI：已配置／待配置。</td><td><strong>更改系统连接</strong> → 阿里邮箱应用和 AI 编辑页。</td></tr><tr><td>提醒发件箱</td><td>已配置／待配置。</td><td><strong>更改提醒发件箱</strong> → 内部邮件兜底和完整汇总的 SMTP 编辑页。</td></tr><tr><td>企业微信群提醒</td><td>已启用 · 群提醒优先，邮件兜底；已配置 · 未启用；或待配置 · 当前使用邮件提醒。</td><td><strong>更改企业微信群提醒</strong> → 群机器人 Webhook 与启用开关。</td></tr><tr><td>负责人管理</td><td>共 N 位负责人，可负责一个或多个邮箱。</td><td><strong>管理负责人</strong> → 负责人列表。</td></tr>
+      </tbody></table></div>
+      <p><strong>已配置</strong>表示后台已有相应配置并建立了客户端对象，不是实时在线测试结果。保存错误、接入失败和提醒未达的排查方式不同，见后文。</p>
+      <p>本页没有密钥展示、保存、发信或单独的监控启停按钮（暂停／恢复使用右上角全局图标）。回到业务页使用左侧导航。</p>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+
+    <section class="section" id="connections">
+      <div class="section-num">11 / 设置子页面</div><h2>更改系统连接</h2>
+      <p><span class="path">设置 → 更改系统连接</span> 维护阿里邮箱 API 应用以及 AI 服务。输入停止约 1 秒后自动保存整份表单，不需要手动点保存。</p>
+      <div class="table-wrap"><table class="wide"><thead><tr><th>字段</th><th>填什么</th><th>必填与变更规则</th></tr></thead><tbody>
+        <tr><td>阿里邮箱 Client ID</td><td>管理员为邮箱 API 应用取得的 ID，不是某个邮箱的登录账号。</td><td>与 Client Secret 成对配置。首次可暂不配置整组，但无法启用真实监控。</td></tr><tr><td>阿里邮箱 Client Secret</td><td>上述应用对应的密钥，密码框输入。</td><td>已有配置不回显，显示“已配置，留空保留”；首次显示“尚未配置”。更换 Client ID 时必须同时提供对应新 Secret。</td></tr><tr><td>AI API 地址</td><td>兼容接口的基础地址。当前默认 <code>https://dashscope.aliyuncs.com/compatible-mode/v1</code>，具体取值以所用服务为准。</td><td>必填 HTTPS 地址，不包含账号、查询参数、片段或空白。它是基础地址，不是阿里邮箱 API 地址。</td></tr><tr><td>AI 模型</td><td>该 AI 服务支持的模型标识，当前默认 <code>qwen-plus</code>。</td><td>必填，最多 200 字符。更换模型时需确认账户有调用权限。</td></tr><tr><td>AI API Key</td><td>AI 服务对应的 API Key，不是邮箱 Client Secret。</td><td>已有值不回显，留空保留。更换已配置服务的 API 地址时，应同时填新服务的 Key。</td></tr>
+      </tbody></table></div>
+      <h3>按钮与保存结果</h3>
+      <ul><li><strong>← 返回：</strong>先尝试保存，再返回设置总览。</li><li><strong>放弃未保存修改：</strong>仅在校验或保存失败后出现，从后台重载最后成功保存的配置；不能撤销已经保存成功的值。</li><li>没有“连接测试”按钮；保存会做格式与配对校验并重载后台配置，不会发测试邮件。新的连接配置在后续扫描轮次使用。</li></ul>
+      <div class="callout"><p>更换 ID／地址和密钥时，可以连续填写；自动保存中途可能提示缺少对应密钥，补齐后继续自动保存即可。只有看到<strong>已自动保存</strong>才表示此次改动已落盘；失败时继续使用最后成功保存的配置。</p></div>
+      <p>密钥成功保存后输入框自动清空并显示“已配置，留空保留”。空框不是密钥丢失。当前没有“显示原密钥”或“一键清除已存密钥”按钮。</p>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+
+    <section class="section" id="smtp">
+      <div class="section-num">12 / 设置子页面</div><h2>更改提醒发件箱</h2>
+      <p><span class="path">设置 → 更改提醒发件箱</span> 这个发件箱用于给负责人发送内部邮件兜底和完整汇总，与六个被监管邮箱及负责人收件箱是不同概念。启用企业微信群提醒后仍需保留它。</p>
+      <div class="table-wrap"><table class="wide"><thead><tr><th>字段</th><th>填什么</th><th>规则</th></tr></thead><tbody>
+        <tr><td>发件邮箱</td><td>用于发送提醒的完整邮箱地址。</td><td>必填，有效邮箱格式。更换地址时要同时填写对应授权码。</td></tr><tr><td>SMTP 服务器</td><td>邮箱平台提供的 SMTP 主机名。</td><td>必填；不要填管理后台网址、<code>https://</code> 前缀或路径。更换服务器时要同时填写对应授权码。</td></tr><tr><td>端口</td><td>平台提供的数字端口，默认 465。</td><td>必填，范围 1–65535，与加密方式按平台要求匹配。</td></tr><tr><td>客户端授权码</td><td>该发件箱启用 SMTP 后生成的客户端授权码／平台要求的发送凭据。</td><td>首次必填；已有授权码可留空保留。成功保存后清空输入框，不回显原值。</td></tr><tr><td>加密方式</td><td>下拉项：<strong>SSL/TLS（通常使用465端口）</strong>、<strong>STARTTLS（通常使用587端口）</strong>。</td><td>按邮箱平台支持方式选择。修改选择不会自动替你改端口。</td></tr>
+      </tbody></table></div>
+      <p>修改后自动保存。“← 返回”先保存再回设置；“放弃未保存修改”仅在失败时出现。</p>
+      <h3>怎么确认设置真的能发信</h3><p>本页保存只校验配置并准备发送客户端，<strong>不会自动发测试邮件</strong>。保存完成后去“管理负责人 → 更改／添加负责人 → 发送测试邮件”，实际检查目标收件箱和企业微信新邮件提示。</p>
+      <p>可以使用支持 SMTP 的其他平台邮箱作为提醒发件箱，但实际服务器、授权方式、发送频率及平台权限需要按该平台配置。收件邮箱是否触发企业微信提示，取决于负责人的企业邮箱接入及终端设置。</p>
+      <div class="callout warn"><p>更换发件账号或服务器后，如果只留空授权码，系统会拒绝保存并提示重新填写。新配置保存成功后影响后续提醒，建议立即做一次负责人投递测试；当前页面没有批量测试按钮。</p></div>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+
+    <section class="section" id="wecom">
+      <div class="section-num">12A / 设置子页面</div><h2>更改企业微信群提醒</h2>
+      <p><span class="path">右上角设置 → 企业微信群提醒 → 更改企业微信群提醒</span>。这是独立编辑页，平时不在业务页面展开 Webhook。</p>
+      <div class="table-wrap"><table class="wide"><thead><tr><th>字段／按钮</th><th>作用</th><th>规则</th></tr></thead><tbody>
+        <tr><td>启用企业微信群提醒</td><td>复选框，启用后业务来信、首次处理复核、截止前复核及运行提示优先发群；每日完整汇总同步发群和邮件。</td><td>勾选或取消后自动保存。启用时须已有或填入有效 Webhook；取消后使用邮件，保存的 Webhook 保留。</td></tr>
+        <tr><td>群机器人 Webhook</td><td>密码框，填写获授权内部企业微信群的官方群机器人发送地址。</td><td>已有值不回显，提示“已配置，留空保留”；首次填写完整有效地址。保存后输入框清空，原值由后端加密保留；不要写入聊天或交接文档。</td></tr>
+        <tr><td>← 返回</td><td>先尝试保存，再回设置总览。</td><td>保存失败时留在原页。</td></tr>
+        <tr><td>放弃未保存修改</td><td>仅失败时显示，重载最后成功保存的配置。</td><td>不会撤销已成功自动保存的值。</td></tr>
+      </tbody></table></div>
+      <p>停止输入或选择约 1 秒后自动保存；没有手动保存或发送群测试按钮，自动保存不会发群消息。<strong>发送测试邮件</strong>仍在负责人编辑页，只验证 SMTP 通道。</p>
+      <div class="callout warn"><p><strong>群内全体成员均可见提醒内容。</strong>只使用已获授权的公司内部群，@ 并不限制可见范围。各负责人在编辑页可选填企业微信成员账号；同一即时或复核提醒合并 @ 已配置的当前负责人，缺失账号的人发邮件，群接口报错或网络失败时改发 SMTP 邮件。每日完整汇总按负责人分别发群并 @ 该报告负责人，同时保留原邮件投递；缺失成员账号的人只收邮件。群长内容编号分条，不截断；群失败重试未成功分片，重启后继续。沿用本开关，无额外开关或按钮。敏感信息仍按原规则遮蔽。</p></div>
+      <p>v1.6.0 在 2026-10-12 已完成 Windows 产品真实新来信联调，用户确认对应群消息、正确 @ 李涵、手机和电脑提示三项均正常。用户已提供 v1.6.1 在 18:00 发出的群日报及 @ 李涵内容，确认群内已显示日报；完整分条、设备提示和邮件同步仍待完整验收，不能以此前新来信验收替代；更换群或负责人后仍需按公司安排核对实际投递。</p>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+
+    <section class="section" id="people">
+      <div class="section-num">13 / 设置子页面</div><h2>负责人管理</h2>
+      <p><span class="path">设置 → 管理负责人</span> 或 <span class="path">邮箱与负责人 → 管理负责人</span>。每位负责人有独立卡片，显示姓名、接收提醒的邮箱、已配置的企业微信成员账号，以及负责的一个或多个监管邮箱。</p>
+      <div class="table-wrap"><table class="wide"><thead><tr><th>控件／内容</th><th>作用与结果</th></tr></thead><tbody>
+        <tr><td>← 返回设置</td><td>回到设置总览，不是回到邮箱列表；邮箱列表可从左侧导航进入。</td></tr><tr><td>添加负责人</td><td>打开新增表单。创建后还需到相应邮箱页勾选分配，才能接收那些邮箱的业务提醒。</td></tr><tr><td>姓名与邮箱</td><td>当前负责人信息；未填写时可能显示“尚未填写提醒邮箱”。</td></tr><tr><td>负责：邮箱列表</td><td>当前负责的监管账号；没有分配时显示“尚未分配邮箱”。</td></tr><tr><td>更改</td><td>打开这位负责人的独立编辑页，修改姓名、收件邮箱或可选企业微信成员账号，也可发送测试邮件。</td></tr><tr><td>移除负责人</td><td>立即提交移除请求，当前没有二次确认弹窗。成功提示“负责人已移除”，列表重新加载。</td></tr>
+      </tbody></table></div>
+      <h3>移除负责人有哪些限制</h3><p>如果此人是任何一个监管邮箱的唯一负责人，系统拒绝移除，并指出需先为该邮箱添加其他负责人。请先新增接替人，再到相关邮箱把接替人勾选保存，然后回来移除旧负责人。</p>
+      <p>移除后取消其与邮箱的分配关系及尚未发送的通知，原有业务记录和操作历史保留。已经发出的邮件无法撤回。被移除的人如需重新加入，应使用“添加负责人”入口，而不是沿用失效的旧编辑链接。</p>
+      <p>负责人可以随时变化；一个人可负责多个邮箱，一个邮箱可由多人同时负责。不同在用负责人不能重复使用同一接收提醒地址；需要一个人覆盖多个邮箱时，复用已有负责人即可。</p>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+
+    <section class="section" id="person">
+      <div class="section-num">14 / 新增及编辑子页面</div><h2>添加负责人／更改负责人</h2>
+      <p><span class="path">负责人管理 → 添加负责人／某人的更改</span>。页面顶栏标题为“负责人设置”，表单标题为“添加负责人”或“更改负责人”。助手内部标识由系统生成；企业微信成员账号（userid）是另一个可选字段，用于群内 @。</p>
+      <div class="table-wrap"><table><thead><tr><th>字段／按钮</th><th>说明</th></tr></thead><tbody>
+        <tr><td>姓名</td><td>必填，最多 80 字符，作为界面显示和负责人区分使用。</td></tr><tr><td>接收提醒的邮箱</td><td>必填，填写一个完整有效邮箱地址，不是企业微信账号、手机号或多个地址列表。不同在用负责人不能使用重复地址。用于群失败／成员账号为空时兜底及每日完整汇总。</td></tr><tr><td>企业微信成员账号（用于群内@）</td><td>可选，填写管理员核对的企业微信成员 userid，不是姓名、手机号或助手内部标识。留空时此负责人接收邮件；修改后自动保存，后续群提醒使用当前账号。</td></tr><tr><td>← 返回</td><td>尝试保存后回到负责人管理。</td></tr><tr><td>发送测试邮件</td><td>先校验并保存当前表单，再通过已配置提醒发件箱向当前填写的收件邮箱发送测试；只验证邮件，不发群消息。</td></tr><tr><td>放弃未保存修改</td><td>仅保存失败时出现，重载最后保存的信息；尚未成功创建的新增页面会回到空白新增状态。</td></tr>
+      </tbody></table></div>
+      <h3>新增后什么时候生效</h3><p>姓名与邮箱完整有效并自动保存成功后，这位负责人即已创建；页面内部路由会从新增标识改为其正式标识。随后返回列表，并到“邮箱与负责人 → 对应邮箱更改”勾选此人。<strong>添加负责人本身不会自动分配邮箱，也不会自动发测试邮件。</strong></p>
+      <h3>发送测试邮件：这是实际发信操作</h3>
+      <ol><li>先在“更改提醒发件箱”完成有效配置。</li><li>确认当前负责人姓名与收件地址准确，点击<strong>发送测试邮件</strong>。</li><li>系统发送主题 <code>【Oneasy】邮件提醒连接测试</code>，内容说明无需回复。</li><li>页面成功提示“测试邮件已提交，请检查收件箱及企业微信新邮件提醒”。分别检查邮件收件箱和企业微信；提交成功不能代替实际收件确认。</li></ol>
+      <p>测试可选，未测试不会阻止负责人保存或启用监控；演示模式不发送测试，暂停状态也会阻止测试发信，需先恢复监控。每点击一次可能实际发出一封测试邮件，请避免反复点击。</p>
+      <h3>更改提醒邮箱后</h3><p>自动保存后，后续提醒使用新地址。尚未发送的通知会按新地址继续处理；已发送到旧地址的邮件不撤回。这里只修改负责人信息，不自动给原客户发信。</p>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+
+    <section class="section" id="mailbox-editor">
+      <div class="section-num">15 / 单个邮箱编辑页</div><h2>邮箱设置：多人分配、文件夹与移动</h2>
+      <p><span class="path">邮箱与负责人 → 对应邮箱行的更改</span>。顶栏为“邮箱设置”，表单标题显示“邮箱账号 · 业务用途”。该账号固定，不能在这里改成其他邮箱或新增第七个监管邮箱。</p>
+      <h3>负责人（至少选择一位）</h3><p>每个候选项显示“姓名 · 提醒邮箱”，使用复选框多选。一个邮箱可同时勾选多人，同一人也可以在多个邮箱被勾选。启用群提醒后，即时及复核提醒合并为一条群消息并 @ 已配置成员账号的当前负责人，其他负责人收邮件；每日完整汇总按负责人分别发群并 @ 该报告负责人，同时发原提醒邮箱，未填成员账号只发邮件。</p>
+      <p>至少保留一位有效负责人；全部取消时自动保存会失败。若候选人信息缺失，先通过<strong>添加或管理负责人</strong>打开管理页，补齐姓名和提醒邮箱。该按钮会先尝试保存当前邮箱表单，校验失败时无法离开，需先恢复有效选择或放弃未保存修改。</p>
+      <h3>监控文件夹 ID，以逗号分隔</h3>
+      <div class="table-wrap"><table><thead><tr><th>填法</th><th>含义／注意</th></tr></thead><tbody>
+        <tr><td>留空</td><td>按页面提示监控收件箱、垃圾箱及全部自定义文件夹；后台排除根目录、已发送、草稿、删除等禁止范围。</td></tr><tr><td>填写多个 ID</td><td>使用阿里邮箱接口返回的真实文件夹 ID，用<strong>英文逗号</strong>隔开。不是填写“收件箱”等中文名称；每个 ID 不超过 100 字符，需符合接口标识格式。</td></tr><tr><td>保存后</td><td>格式合法不等于指定文件夹真实存在或已扫描成功；ID 应由管理员确认，随后核对来信和扫描情况。不要猜测 ID。</td></tr>
+      </tbody></table></div>
+      <h3>开启广告等邮件自动移入“助手待复核”</h3>
+      <p>这是按邮箱控制的复选开关。开启后，后台可在原邮箱创建／使用<strong>助手待复核</strong>文件夹，把未人工复核的“每日复核”类邮件实际移入；原邮件不是永久删除。更正业务邮件或单独恢复时，可安排回原文件夹。</p>
+      <div class="callout warn"><p><strong>这是会改变原邮箱邮件位置的功能。</strong>开启后也可能处理已记录但尚未复核的每日复核邮件。关闭开关不会自动恢复此前移动的邮件，已排队的移动／恢复可能仍继续。当前真实客户联调未覆盖移动场景，启用前应按公司验收安排核对结果。</p></div>
+      <p>若只希望检测与提醒，可保持此开关关闭；“邮件人工复核”和每日汇总仍然可用。移动后在原邮箱或操作记录中核对位置和结果，失败时交人工处理。</p>
+      <h3>按钮与分配变更的影响</h3>
+      <ul><li><strong>← 返回：</strong>先保存，再回“邮箱与负责人”。</li><li><strong>添加或管理负责人：</strong>进入负责人管理，先保存当前修改。</li><li><strong>放弃未保存修改：</strong>校验／保存失败时显示，重载已保存状态。</li><li>选择、文件夹和移动开关作为一份表单自动保存。保存这些配置不会自动发测试邮件。</li><li>分配变更会调整待发通知和待发汇总；新增负责人接续尚未发出的提醒、未汇总的内容，不会把已向旧负责人全部发送完的历史即时提醒整批重发。</li><li>移除某人的该邮箱分配后，不再向其发送这个邮箱尚未发出的通知；已发送邮件保留在原收件人邮箱中。</li></ul>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+
+    <section class="section" id="autosave">
+      <div class="section-num">16 / 所有编辑表单通用</div><h2>自动保存、失败与离开页面</h2>
+      <p>系统连接、提醒发件箱、企业微信群提醒、负责人和单个邮箱编辑页都采用自动保存，没有手动“保存”按钮。停止输入或选择约 1 秒后提交<strong>整份当前表单</strong>；继续输入会重新计时，表单内按回车也会尝试保存。</p>
+      <div class="table-wrap"><table class="wide"><thead><tr><th>状态原文</th><th>含义</th><th>你应怎么做</th></tr></thead><tbody>
+        <tr><td>修改后自动保存</td><td>尚未产生新的修改。</td><td>需要更改时直接输入。</td></tr><tr><td>等待自动保存…</td><td>检测到修改，等待输入暂停。</td><td>继续填完，停止输入后稍等。</td></tr><tr><td>正在自动保存…</td><td>正在向本机后台提交。</td><td>等结果，不要立刻关闭窗口。</td></tr><tr><td>已自动保存</td><td>本次表单已成功保存。</td><td>可以返回或继续编辑；外部连接仍需按相应方法验证。</td></tr><tr><td>配置未变化</td><td>修改后又回到了已保存值，没有新内容需要提交。</td><td>可以正常离开。</td></tr><tr><td>尚未保存：请补全有效信息。</td><td>必填项、邮箱格式、数字范围等未通过前端校验。</td><td>补齐后等自动保存，或放弃未保存修改。</td></tr><tr><td>未保存：具体原因</td><td>后端校验或落盘失败，例如缺密钥、无负责人、目录权限异常。</td><td>按提示修正，继续等待保存；原已保存配置继续保留。</td></tr><tr><td>演示模式：不可修改配置</td><td>当前是只读演示。</td><td>不要把样例当作正式接入状态。</td></tr>
+      </tbody></table></div>
+      <h3>离开时的行为</h3>
+      <ul><li>点击页内返回、其他导航、顶栏设置或刷新，系统先立即尝试保存；失败则停留原页。</li><li>浏览器前进／后退引起页内路由变化时也会先尝试保存。</li><li>关闭窗口、刷新浏览器且仍有修改／正在保存时，浏览器可能弹出自带离开提醒。此时返回页面确认保存结果；这不是助手的管理密码。</li><li><strong>放弃未保存修改</strong>只在失败后出现，等待正在进行的保存结束，再重载最后已保存数据。它不会恢复到昨天，也不能撤销前一笔已经自动保存成功的更改。</li></ul>
+      <p>自动保存不等于自动测试。保存配置、Webhook、添加人或分配邮箱不会自动发测试提醒；只有明确点击“发送测试邮件”才执行那次 SMTP 测试，不会发群测试消息。启用监控后，正常业务提醒和定时汇总会由后台按渠道规则发送。</p>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+
+    <section class="section" id="workflows">
+      <div class="section-num">17 / 按场景操作</div><h2>新同事照着做的操作步骤</h2>
+      <h3>场景 A：在原监控电脑上接手日常工作</h3>
+      <ol class="steps"><li>从桌面或应用程序打开 Oneasy 邮件助手，在<strong>运行概览</strong>确认“监控已启用”，刷新并查看六个邮箱最近扫描时间。</li><li>确认<strong>邮箱与负责人</strong>中的分配符合当前工作安排；只换使用者但不换连接服务时，无需重新输入公司密钥。</li><li>收到群或邮件提醒后查看监管邮箱、主题和发件人，在阿里原邮箱阅读与处理，回复仍由人工发送。</li><li>每天查看<strong>每日汇总</strong>和<strong>邮件人工复核</strong>；发现遗漏业务来信时更正。完成业务后不需要在助手内回执。</li></ol>
+      <h3>场景 B：第一次在一台新电脑接入</h3>
+      <ol class="steps"><li>完整解压，查看<strong>部署邮件助手.html</strong>并运行对应系统安装脚本，等待成功。不要同时启用第二台监控电脑。</li><li>打开助手 → <strong>设置 → 更改系统连接</strong>，填写阿里应用和 AI 参数，等“已自动保存”。</li><li><strong>设置 → 更改提醒发件箱</strong>，填写 SMTP 信息及授权码，等保存成功。</li><li>按需在<strong>设置 → 企业微信群提醒 → 更改企业微信群提醒</strong>填写获授权内部群的 Webhook 并启用，等自动保存；保存不发送群测试消息。</li><li><strong>管理负责人</strong>，添加或更改实际收件人及可选企业微信成员账号。到每个邮箱“更改”勾选负责人，至少一人。</li><li>进入负责人编辑页，明确点击<strong>发送测试邮件</strong>；实际确认邮件收件及按需接入的企业微信新邮件提示；这只验证 SMTP 通道。</li><li>在<strong>邮箱与负责人</strong>点击<strong>完成接入检查并启用</strong>。回概览检查扫描时间，再安排一封启用后的已授权测试来信，核对检测、分类、群投递、手机／电脑 @ 及邮件兜底全链路。</li></ol>
+      <h3 id="add-group-mentions">场景 C：添加共同负责人／新增群内 @ 人员</h3>
+      <ol class="steps"><li>先把新人员加入已配置的企业微信内部提醒群。</li><li>助手右上角<strong>设置 → 管理负责人 → 添加负责人</strong>，填写姓名、提醒邮箱和<strong>企业微信成员账号（用于群内@）</strong>。若此人已经在负责人列表中，点击其<strong>更改</strong>补充账号即可。成员账号是管理员核对的 userid，不是群昵称；例如李涵配置的是 <code>LiHan</code>。想接收群内 @ 时须填写，留空只收邮件。</li><li>等待页面显示<strong>已自动保存</strong>。按需点击<strong>发送测试邮件</strong>确认邮箱投递；该按钮只测试邮件，不测试群内 @。</li><li>返回<strong>邮箱与负责人</strong>，点击目标邮箱旁的<strong>更改</strong>，保留原负责人，同时勾选新人员，等待自动保存。需要共同负责多个邮箱时，逐个邮箱设置。</li><li>启用群提醒后，该邮箱后续即时及复核群提醒会合并 @ 已配置成员账号的当前负责人；每日完整汇总按负责人分别发群并 @ 本人，同时发原提醒邮箱。缺失成员账号的人只收邮件。</li></ol>
+      <div class="callout"><p>新增 @ 人员<strong>无需更换群 Webhook</strong>。仅把人加入群，他可以看见群消息，但助手不会自动 @ 他；还需要填写成员账号并分配到相应监控邮箱。保存设置不会自动发送群测试消息，可用一封经授权的新来信核对实际 @ 和设备提示。</p></div>
+      <h3>场景 D：原负责人离职／交接</h3><ol><li>先添加接替负责人并确认有效收件地址及可选企业微信成员账号。</li><li>逐个进入相关邮箱，勾选接替人、取消旧负责人，保存；每个邮箱至少保留一人。</li><li>回负责人管理移除旧负责人。若仍被提示是唯一负责人，按提示检查尚未完成交接的邮箱。</li><li>通过原邮箱和台账交接已处理／未处理事项。系统没有完成状态，不能自动生成完整未完成业务清单。</li></ol>
+      <h3>场景 E：发现一封误归为每日复核的客户邮件</h3><ol><li>人工复核页或汇总详情 → 打开原邮箱确认内容。</li><li>点<strong>更正为业务邮件</strong>，看到“操作已记录”。</li><li>去<strong>业务来信</strong>刷新查看新分类；如涉及恢复，去原邮箱和操作记录核对。</li><li>负责人正常人工处理，不需要回复助手。更正会触发新的负责人提醒。</li></ol>
+      <h3>场景 F：替换 AI、提醒发件箱或内部提醒群</h3><p>进入对应设置页，连续填好新地址／账号和对应新密钥，等“已自动保存”。更换提醒发件箱后去负责人页发送测试；更换 AI 后观察后续分类和操作记录。当前没有独立 AI 测试按钮，也没有按钮批量重判历史邮件。更换内部提醒群时，先确认群成员均获授权，再在群提醒编辑页输入新 Webhook 并等自动保存；已有值留空会保留原群地址。产品群投递需用已授权的新来信另行验证。</p>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+
+    <section class="section" id="troubleshooting">
+      <div class="section-num">18 / 常见问题</div><h2>出现问题时怎么检查</h2>
+      <div class="faq"><h3>1. 助手页面打不开，或显示后台连接中断</h3><p>在实际监控电脑打开 <code>http://127.0.0.1:8765/</code>，确认部署已完成、后台服务正在运行，再刷新。其他电脑输入这个地址会访问它自己，不是监控电脑。仍失败时请维护人员检查安装目录的 <code>logs</code>。</p></div>
+      <div class="faq"><h3>2. 部署提示 8765 端口被占用</h3><p>可能是旧版助手或其他程序。先让管理员确认进程身份；部署脚本不会强行结束其他程序。不要同时运行开发后台和正式服务，也不要随意结束不认识的程序。</p></div>
+      <div class="faq"><h3>3. 显示已配置，为什么还不能启用或收取邮件</h3><p>“已配置”只代表参数存在。检查阿里应用 ID／Secret、六个账号的 API 授权及网络；启用检查会验证邮箱文件夹访问。若已启用，查看最近扫描是否更新以及 <code>mailbox_scan_failed</code> 等记录。</p></div>
+      <div class="faq"><h3>4. 启用后看不到之前的旧邮件</h3><p>设计上只处理启用时间后收到的新邮件，不回填历史邮件。旧邮件仍在原邮箱，需要人工处理。升级同机程序会保留原启用时间；不是每次打开窗口都重设时间。</p></div>
+      <div class="faq"><h3>5. 收不到业务提醒，但页面已经有记录</h3><p>先查该邮件是否为“每日复核”；再核对邮箱分配、群提醒开关、Webhook 和负责人企业微信成员账号。缺少成员账号或群失败时应改发邮件，再核对收件地址、SMTP 设置和垃圾箱。查看 <code>notification_sent</code>／<code>notification_fallback</code>／<code>notification_failed</code> 的渠道及原因；负责人页测试只验证 SMTP。失败通知会自动重试，界面没有手动重发按钮。</p></div>
+      <div class="faq"><h3>6. 邮件或群消息已收到，但企业微信没有弹出或 @</h3><p>先区分群消息和邮件新邮件提示。群消息需核对负责人当前企业微信成员账号、是否在目标内部群、群通知及电脑／手机通知设置；群内全体成员可见消息，@ 不能限制可见范围。邮件提示需核对企业微信邮箱接入和新邮件提醒设置。接口接受只证明已提交，实际弹出需本人确认。</p></div>
+      <div class="faq"><h3>7. 普通客户邮件被标记为转人工</h3><p>可能是规则发现敏感内容、存在无法完整检查的附件或内嵌图片，也可能是 AI 不可用或判断不确定。查看判断依据并到原邮箱核对。该策略仍即时提醒，不代表来信被丢弃。</p></div>
+      <div class="faq"><h3>8. 自动保存失败，不能返回</h3><p>阅读状态行的原因，补齐有效邮箱、成对密钥或至少一位负责人；或者点击“放弃未保存修改”回到最后保存状态。返回按钮不会绕过失败校验。</p></div>
+      <div class="faq"><h3>9. 密钥框明明是空的，是否需要每次再填</h3><p>若占位提示“已配置，留空保留”，原值已存于本机后台，不回显属于正常行为。保持原 ID／服务地址／发件账号时可留空；更换对应标识时再填新密钥或授权码。群 Webhook 密码框留空也会保留已存值，换群时填写新的完整 Webhook。</p></div>
+      <div class="faq"><h3>10. 移除负责人被拒绝</h3><p>此人仍是某个邮箱唯一负责人。先添加接替人并在该邮箱勾选保存，再移除。添加一个未分配的人并不能解决唯一负责人限制。</p></div>
+      <div class="faq"><h3>11. 每日汇总里看见已更正前的分类，或提示记录已更新</h3><p>汇总是生成时的保存内容，可能不是最新分类。回业务来信／人工复核刷新查看最新记录。遇到“记录已更新，请刷新”，刷新后按当前状态操作，避免在旧汇总上重复提交。</p></div>
+      <div class="faq"><h3>12. 点击恢复后原邮箱位置没有立即变化</h3><p>“操作已记录”只代表已提交。后台需执行并确认；看 <code>restored</code> 或失败事件，并直接检查原邮箱。若移动结果未能确认，交人工核对实际位置，不把页面短暂旧状态当成邮件丢失。</p></div>
+      <div class="faq"><h3>13. 同一封邮件为什么有多封提醒</h3><p>初次业务通知、首次 18:00 复核、有效截止前复核是不同提醒；人工更正也会新安排通知。长汇总可能分段。若多台电脑同时监控同一组邮箱，也会造成重复，应只保留一台启用。</p></div>
+      <div class="faq"><h3>14. 已经处理完了，能否取消后续复核</h3><p>当前没有“已完成”或按事项取消按钮。系统不跟踪完成状态；收到复核后自行检查，无需反馈。如果需要整体暂停，使用右上角方形图标；这会暂停所有邮箱的自动处理和通知，不能按单一事项取消。</p></div>
+      <div class="faq"><h3>15. 是否能用任何电脑管理同一套助手</h3><p>当前管理界面只开放在运行后台的本机，并非公共网站。负责人可以在任意已加入内部群、配置邮箱和通知的设备收取提醒。换监控电脑按迁移流程执行，不能把本机地址当成远程管理地址。</p></div>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+
+    <section class="section" id="acceptance">
+      <div class="section-num">19 / 验收与维护</div><h2>当前验证范围及交接时要保留的内容</h2>
+      <p>本说明描述当前实现的功能，不等于每种业务场景都已完成真实收发验收。正式验收应结合交付目录中的实测记录和包内验证记录。</p>
+      <div class="table-wrap"><table><thead><tr><th>范围</th><th>本次交付状态</th></tr></thead><tbody>
+        <tr><td>原版 Windows 客户业务来信链路</td><td>已实际联调：检测、分类、摘要、提醒投递；第二次复测已确认主题和发件人完整，负责人已确认收到邮件及新邮件提示。</td></tr><tr><td>自动化回归</td><td>v1.6.0 历史完整离线回归：149 项 Python 检查及 16 项前端行为检查通过，包含原有业务／运行控制、群通道、配置、多人合并、邮件兜底及设置行为。原 Windows 独立测试服务已验证持久暂停、恢复、正规退出及停止后 65 秒未自动拉起；测试服务已清理。v1.6.1 完整自动回归已通过：161 项后端检查及 16 项前端行为检查，包含 12 项每日群汇总检查；独立代码审查未发现重要问题，真实北京时间18:00定时投递仍待核验；自动检查不替代全部实际业务场景验收。</td></tr><tr><td>广告过滤、敏感信息、截止复核、每日汇总和邮件移动</td><td>功能已有实现，当前真实客户联调未完整覆盖这些业务场景，需按验收安排继续确认。</td></tr><tr><td>Mac 部署与开机恢复</td><td>已提供适配脚本及 Intel / Apple 芯片资源，尚未完成真实 Mac 设备验收。</td></tr><tr><td>企业微信内部群机器人</td><td>2026-10-12 Windows 产品真实来信联调已通过：模拟客户开通咨询进入 service@oneasy.cc 后完成业务分类并发送群提醒，用户确认对应群消息、正确 @ 李涵、手机和电脑提示三项均正常。本次未触发 SMTP 兜底；从收信到接口接受约 14 秒仅代表该次结果。其他业务场景及 Mac 实机仍按各自范围验收。详见同目录“企业微信群提醒验证记录.txt”。</td></tr><tr><td>每日完整群汇总</td><td>用户已提供 v1.6.1 的 18:00 群日报及 @ 李涵内容，确认群内已显示日报；完整分条、设备提示及邮件同步仍待完整验收。</td></tr><tr><td>v1.6.2 群消息可读性</td><td>168 项后端回归、16 项前端检查通过；最终 30 项群提醒与日报检查通过。独立审查发现的旧建议截断、模糊截止提示遗漏已修复并验证。新格式实际群显示待后续消息确认。</td></tr><tr><td>v1.6.3 同类运行异常合并</td><td>174项后端完整回归及16项前端检查通过，包含6项新增告警合并检查。详见“企业微信群提醒验证记录.txt”。真实群合并场景待自然故障或后续验收确认，未主动制造邮箱故障或补发测试提醒。</td></tr><tr><td>个人微信</td><td>未接入。</td></tr>
+      </tbody></table></div>
+      <h3>安装包内相关文件</h3>
+      <div class="table-wrap"><table><thead><tr><th>位置</th><th>用途</th></tr></thead><tbody>
+        <tr><td>部署邮件助手.html</td><td>统一系统识别和安装指引。</td></tr><tr><td>安装资源 / app / static</td><td>前端：index.html 页面外壳、style.css 样式、admin.js 日常页面逻辑、settings.js 设置与自动保存。</td></tr><tr><td>安装资源 / app</td><td>后端：阿里邮箱接入、规则与 AI、后台扫描、数据台账、提醒发送和本机服务。</td></tr><tr><td>安装资源 / scripts</td><td>Windows / Mac 部署和桌面启动脚本。</td></tr><tr><td>安装资源 / runtime、vendor</td><td>Windows 运行环境、Mac 官方运行环境安装资源及依赖。</td></tr><tr><td>安装资源 / docs</td><td>原有功能说明、管理员配置清单、Windows 与 Mac 部署说明和运行环境来源。</td></tr><tr><td>安装资源 / tests、验证记录.txt</td><td>自动化检查代码及验证边界。</td></tr>
+      </tbody></table></div>
+      <h3>正在运行的系统数据</h3><p>运行数据在<strong>实际安装目录</strong>中，不在本 HTML 里。<code>data</code> 保存数据库及本机加密配置，<code>logs</code> 用于检查后台运行情况，系统还会生成数据库备份和归档。不要因为发给新同事交付包，就删除原机的运行数据。</p>
+      <p>台账导出用于查看与交接；灾难恢复、跨机迁移和跨系统切换需维护人员处理数据库、配置及加密材料，当前没有一键迁移或跨电脑同步页面。既有 Windows 主机原数据应保留，切换后历史待处理邮件仍需人工交接。</p>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+
+    <section class="section" id="button-index">
+      <div class="section-num">20 / 按钮与控件索引</div><h2>所有按钮在哪里、会做什么</h2>
+      <p>以下列出当前系统页面中实际出现的按钮、链接型操作及关键选择控件。相同文案出现在不同页面时，按具体上下文解释。</p>
+      <div class="table-wrap"><table class="wide coverage"><thead><tr><th>文案</th><th>位置</th><th>结果／查看详细说明</th></tr></thead><tbody>
+        <tr><td>运行概览</td><td>左侧导航</td><td><a href="#overview">查看统计、扫描时间及提醒安排。</a></td></tr><tr><td>业务来信</td><td>左侧导航</td><td><a href="#business">查看业务请求、转人工、信息通知。</a></td></tr><tr><td>邮件人工复核</td><td>左侧导航</td><td><a href="#review">检查未即时提醒邮件并更正。</a></td></tr><tr><td>每日汇总</td><td>左侧导航</td><td><a href="#reports">查看日期／负责人汇总列表。</a></td></tr><tr><td>操作记录</td><td>左侧导航</td><td><a href="#audit">追溯事件、导出台账。</a></td></tr><tr><td>邮箱与负责人</td><td>左侧导航</td><td><a href="#mailboxes">查看邮箱分配和启用状态。</a></td></tr>
+        <tr><td>■ 暂停监控 / ○ 恢复监控</td><td>全局顶栏图标</td><td><a href="#global">持久暂停／恢复全部自动处理与通知，管理页面保留。</a></td></tr>
+        <tr><td>↓ 隐藏到后台</td><td>全局顶栏图标</td><td><a href="#global">只关闭专用客户端窗口，后台保持原状态。</a></td></tr>
+        <tr><td>× 完全退出</td><td>全局顶栏图标</td><td><a href="#global">确认后停止后台服务并关闭专用窗口。</a></td></tr>
+        <tr><td>刷新数据</td><td>全局顶栏</td><td><a href="#global">先尝试保存，重读当前页；汇总详情返回列表。</a></td></tr><tr><td>设置</td><td>全局顶栏</td><td><a href="#configuration">打开四类系统维护入口。</a></td></tr><tr><td>上一页 / 下一页</td><td>业务、复核、操作记录</td><td><a href="#business">邮件每页 30 条；</a><a href="#audit">操作每页 50 条；首尾禁用。</a></td></tr>
+        <tr><td>打开原邮箱处理</td><td>各邮件卡片</td><td><a href="#business">新标签打开阿里邮箱入口，人工登录和查找原邮件。</a></td></tr><tr><td>更正为业务邮件</td><td>每日复核类卡片</td><td><a href="#review">改为业务请求、排队新提醒，按条件安排恢复。</a></td></tr><tr><td>恢复原位置</td><td>已移动邮件卡片</td><td><a href="#review">登记后台恢复，不改变分类或发新业务提醒。</a></td></tr><tr><td>日期 · 负责人姓名</td><td>每日汇总列表</td><td><a href="#reports">打开对应汇总详情。</a></td></tr><tr><td>导出完整台账</td><td>操作记录</td><td><a href="#audit">下载 oneasy-ledger.json，记录导出操作。</a></td></tr>
+        <tr><td>更改</td><td>监管邮箱表格</td><td><a href="#mailbox-editor">编辑该邮箱的多人分配、文件夹和移动设置。</a></td></tr><tr><td>管理负责人</td><td>邮箱与负责人、设置</td><td><a href="#people">查看负责人列表。</a></td></tr><tr><td>完成接入检查并启用</td><td>邮箱与负责人，未启用时</td><td><a href="#mailboxes">检查六邮箱访问、记录启用时间并开始新邮件监控。</a></td></tr><tr><td>更改系统连接</td><td>设置总览</td><td><a href="#connections">编辑阿里邮箱与 AI 参数。</a></td></tr><tr><td>更改提醒发件箱</td><td>设置总览</td><td><a href="#smtp">编辑提醒发件 SMTP 参数。</a></td></tr>
+        <tr><td>更改企业微信群提醒</td><td>设置总览 · 企业微信群提醒</td><td><a href="#wecom">编辑启用开关与群机器人 Webhook，自动保存。</a></td></tr><tr><td>启用企业微信群提醒</td><td>群提醒编辑页</td><td><a href="#wecom">勾选后即时提醒群优先、每日完整汇总群和邮件同步；取消后仅邮件，保留已存 Webhook。</a></td></tr><tr><td>群机器人 Webhook</td><td>群提醒编辑页</td><td><a href="#wecom">密码框，已有值留空保留；保存不发送群测试。</a></td></tr><tr><td>企业微信成员账号（用于群内@）</td><td>负责人新增／编辑页</td><td><a href="#person">可选，留空时仅邮件；已填且启用群提醒时，每日完整汇总同步发群并 @ 本人。</a></td></tr><tr><td>← 返回设置</td><td>负责人管理</td><td><a href="#people">回到设置总览。</a></td></tr><tr><td>添加负责人</td><td>负责人管理</td><td><a href="#person">打开新建表单，完整有效后自动创建。</a></td></tr><tr><td>更改</td><td>负责人卡片</td><td><a href="#person">编辑姓名、提醒地址及可选成员账号，按需测试邮件投递。</a></td></tr><tr><td>移除负责人</td><td>负责人卡片</td><td><a href="#people">立即申请移除；唯一负责人时拒绝，历史保留。</a></td></tr><tr><td>发送测试邮件</td><td>负责人新增／编辑页</td><td><a href="#person">保存后实际发出一封测试邮件。</a></td></tr>
+        <tr><td>← 返回</td><td>系统连接、提醒发件箱、群提醒、负责人、邮箱编辑页</td><td><a href="#autosave">先保存再回上级，失败留在原页。</a></td></tr><tr><td>放弃未保存修改</td><td>编辑表单校验／保存失败时</td><td><a href="#autosave">重载最后成功保存的数据。</a></td></tr><tr><td>添加或管理负责人</td><td>单个邮箱设置</td><td><a href="#mailbox-editor">先保存再进入负责人管理。</a></td></tr><tr><td>负责人复选框</td><td>单个邮箱设置</td><td><a href="#mailbox-editor">多选，至少保留一人，选择自动保存。</a></td></tr><tr><td>广告等邮件移动复选框</td><td>单个邮箱设置</td><td><a href="#mailbox-editor">启用／关闭该邮箱后续复核移动安排。</a></td></tr><tr><td>加密方式下拉框</td><td>提醒发件箱编辑</td><td><a href="#smtp">选择 SSL/TLS 或 STARTTLS；端口需另填匹配值。</a></td></tr><tr><td>选择系统下拉框</td><td>统一部署 HTML</td><td><a href="#install">切换 Windows / Mac 安装指引，不能自动运行安装。</a></td></tr>
+      </tbody></table></div>
+      <h3>本文档自己的控件</h3><p>左侧／顶部目录用于跳转，章节末“返回目录 ↑”回到文首，“打印／另存为 PDF”打开浏览器打印界面。它们只操作这份说明书，不会连接后台或发送任何邮件。</p>
+      <a class="back" href="#top">返回目录 ↑</a>
+    </section>
+    <footer class="end">Oneasy 邮件助手 · 逐页使用说明 · 2026-10-12<br>本文件内置全部样式，可离线打开和打印；系统实际监控、AI 分析及提醒投递仍需联网。</footer>
+  </main>
+</div>
+<script>
+  document.getElementById('print-manual').addEventListener('click', function () { window.print(); });
+</script>
+</body>
+</html>
+

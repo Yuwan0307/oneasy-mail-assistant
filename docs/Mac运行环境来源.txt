@@ -1,0 +1,24 @@
+Mac 运行环境来源与兼容范围
+
+目标：macOS 12 或更新系统，Apple Silicon arm64 与 Intel x86_64。
+
+Python：官方 3.13.16 universal2 安装包；已有较新的 3.13 补丁版时保留。
+来源：https://www.python.org/downloads/release/python-31316/
+文件：python-3.13.16-macos11.pkg
+SHA256：30666509020b4da0dd8bc2e773255f34d76b7bb80b66960a928d5f6daa0192d7
+官方安装包内含 Python 许可；依赖轮子内保留各自的许可元数据。
+
+依赖：来自官方 PyPI 发布文件，按两个架构分别固定版本并离线安装。
+完整清单：runtime-packages-macos-arm64.txt、runtime-packages-macos-x86_64.txt。
+Apple 芯片使用 cryptography 50.0.0。
+Intel 使用 cryptography 48.0.1，因为该项目从 49.0.0 起移除官方 Intel Mac 支持；其余依赖固定版本一致。
+依据：https://cryptography.io/en/50.0.0/changelog/
+配置加密继续使用现有 Fernet 方案；SMTP 使用 Python SSL 和 certifi 验证证书。
+没有把旧版本兼容选择视为安全审计，也没有把下载轮子视为在 Mac 上运行通过。
+
+后台：系统 LaunchDaemon，以安装时指定的普通用户运行，代码由管理员管理。
+依据：https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html
+桌面入口：在目标 Mac 本地生成 AppleScript 应用，打开 Edge/Chrome 独立窗口，未安装则使用默认浏览器。
+交付包及本地生成的壳没有 Apple 开发者签名或公证。
+
+程序配置、数据库和日志保存在本机；本交付包不包含公司密钥或历史数据。

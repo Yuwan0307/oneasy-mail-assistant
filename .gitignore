@@ -1,0 +1,47 @@
+# Local secrets, mail records and generated exports
+data/
+demo-data/
+logs/
+backups/
+archive/
+.env
+.env.*
+!.env.example
+config.json
+*.db
+*.db-*
+*.sqlite*
+*.key
+*.pem
+*.pfx
+*.p12
+*.log
+
+# Python / test output
+__pycache__/
+*.py[cod]
+.test-temp/
+.pytest_cache/
+.venv/
+venv/
+.coverage*
+htmlcov/
+node_modules/
+
+# Offline distribution resources and local deployment output
+runtime/
+vendor/
+dist/
+build/
+manifest.json
+deployment.json
+部署结果.txt
+*.zip
+*.whl
+*.pkg
+*.msi
+*.dmg
+*.app/
+*.lnk
+.DS_Store
+Thumbs.db

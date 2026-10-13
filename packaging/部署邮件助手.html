@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Oneasy 邮件助手 · 统一部署</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif; color:#26332e; background:#f7f8f6; }
+    * { box-sizing:border-box; }
+    body { margin:0; }
+    main { max-width:800px; margin:64px auto; padding:0 24px; }
+    .brand { font-size:14px; font-weight:750; letter-spacing:3px; color:#52675d; }
+    h1 { font-size:32px; letter-spacing:-1px; margin:14px 0 12px; }
+    .intro,.muted { color:#67766e; line-height:1.7; }
+    .intro { margin:0 0 30px; }
+    .card { padding:28px 30px; background:#fff; border:1px solid #e0e6e1; border-radius:18px; box-shadow:0 12px 36px #26332e05; }
+    .card-head { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    .badge { background:#edf5f0; color:#35654d; border-radius:30px; padding:8px 13px; font-size:14px; font-weight:600; }
+    label { font-size:13px; color:#67766e; }
+    select { padding:8px 10px; margin-left:8px; border:1px solid #dce3dd; border-radius:8px; background:#fff; color:#26332e; font:inherit; }
+    h2 { font-size:19px; margin:28px 0 7px; }
+    ol { padding:0; margin:25px 0; list-style:none; counter-reset:steps; }
+    li { counter-increment:steps; display:flex; gap:14px; align-items:flex-start; margin:20px 0; line-height:1.7; }
+    li::before { content:counter(steps); width:27px; height:27px; flex:0 0 27px; border-radius:50%; background:#f0f3f0; text-align:center; font-size:13px; line-height:27px; color:#52675d; }
+    .file { margin-top:7px; padding:12px 15px; background:#f6f8f5; border:1px solid #e6ebe5; border-radius:10px; font-size:15px; overflow-wrap:anywhere; }
+    .hint { font-size:13px; color:#67766e; line-height:1.8; padding-top:19px; border-top:1px solid #edf0eb; }
+    .limit { margin-top:10px; }
+    footer { font-size:12px; color:#7c8880; line-height:1.8; margin:22px 3px; }
+    [hidden] { display:none!important; }
+    @media(max-width:560px) { main { margin:30px auto; padding:0 17px; } h1 { font-size:27px; } .card { padding:22px 20px; } .card-head { align-items:flex-start; } label { display:block; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand">ONEASY</div>
+    <h1>邮件助手部署</h1>
+    <p class="intro">Windows 与 Mac 共用一个交付包。<br>请先完整解压，再根据下方步骤安装。</p>
+    <section class="card" aria-label="部署指引">
+      <div class="card-head">
+        <span class="badge" id="detected" role="status">正在识别系统</span>
+        <label for="os-select">选择系统<select id="os-select"><option value="unknown">请选择</option><option value="windows">Windows</option><option value="macos">Mac</option></select></label>
+      </div>
+      <div id="unknown" hidden>
+        <h2>请选择要安装的电脑系统</h2>
+        <p class="muted">请在 Windows 或 Mac 电脑上打开此页面，并在右上方选择对应系统。</p>
+      </div>
+      <div id="guide" hidden>
+        <h2 id="heading"></h2>
+        <div class="muted" id="supported"></div>
+        <ol>
+          <li><div>回到刚才解压得到的「Oneasy邮件助手」文件夹。</div></li>
+          <li><div>打开其中的 <strong>安装资源</strong> 文件夹。</div></li>
+          <li><div>在文件管理器中双击下面的安装文件：<div class="file" id="installer"></div><div class="muted" id="authorize"></div></div></li>
+        </ol>
+        <div class="hint">
+          本页面提供安装指引，安装程序需要由你手动运行。不要只复制安装脚本，安装资源文件夹中的内容需要保留完整。<br>
+          部署成功后，从桌面或应用程序打开「Oneasy 邮件助手」。关闭助手窗口，后台仍会继续运行。
+          <div class="limit" id="mac-limit" hidden>Mac 版本已完成适配与打包，尚需在真实 Mac 上完成安装及开机恢复验收。</div>
+        </div>
+      </div>
+      <noscript><p class="muted">请打开「安装资源」文件夹：Windows 运行「部署邮件助手.cmd」，Mac 运行「部署邮件助手.command」。</p></noscript>
+    </section>
+    <footer>v1.6.3 · 安装资源内附完整使用说明与验证记录<br>首次换电脑需配置一次连接信息；同一组邮箱只启用一台监控电脑。</footer>
+  </main>
+  <script>
+    function detectSystem(platform, agent, touches) {
+      const text = (platform + ' ' + agent).toLowerCase();
+      if (/android|iphone|ipad|ipod/.test(text) || (/mac/i.test(platform) && touches > 1)) return 'unknown';
+      if (/win/i.test(platform) || /windows/.test(text)) return 'windows';
+      if (/mac/i.test(platform) || /macintosh/.test(text)) return 'macos';
+      return 'unknown';
+    }
+    const platforms = {
+      windows: { name:'Windows', support:'Windows 10 / 11 · x64（Intel / AMD）', file:'部署邮件助手.cmd', authorize:'出现管理员授权窗口时，选择“是”，并等待部署完成。' },
+      macos: { name:'Mac', support:'macOS 12 或更新系统 · Intel / Apple 芯片', file:'部署邮件助手.command', authorize:'提示时输入 Mac 管理员密码；输入时屏幕不会显示字符。' }
+    };
+    function showSystem(system) {
+      const item = platforms[system];
+      document.getElementById('os-select').value = item ? system : 'unknown';
+      document.getElementById('guide').hidden = !item;
+      document.getElementById('unknown').hidden = !!item;
+      document.getElementById('mac-limit').hidden = system !== 'macos';
+      document.getElementById('detected').textContent = item ? '当前系统：' + item.name : '请选择系统';
+      if (!item) return;
+      document.getElementById('heading').textContent = '在 ' + item.name + ' 上安装';
+      document.getElementById('supported').textContent = item.support;
+      document.getElementById('installer').textContent = item.file;
+      document.getElementById('authorize').textContent = item.authorize;
+    }
+    document.getElementById('os-select').addEventListener('change', event => showSystem(event.target.value));
+    showSystem(detectSystem(navigator.platform || '', navigator.userAgent || '', navigator.maxTouchPoints || 0));
+  </script>
+</body>
+</html>

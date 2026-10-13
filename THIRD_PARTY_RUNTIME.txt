@@ -1,0 +1,8 @@
+Python 3.13.16 Windows embeddable x64
+Official source: https://www.python.org/ftp/python/3.13.16/python-3.13.16-embed-amd64.zip
+Archive SHA-256: 97dae5274cc54867065e8d5a3226e48c35017ed332a0fdb0e27d5b5821961297
+License: runtime/LICENSE.txt
+
+Bundled dependencies: runtime-packages.txt
+Dependency license/notice files are retained in runtime/Lib/site-packages and their dist-info folders.
+Microsoft Edge is not redistributed; the launcher uses the locally installed browser.
