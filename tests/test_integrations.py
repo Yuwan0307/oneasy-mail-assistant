@@ -1,5 +1,6 @@
 import json
 import unittest
+from unittest.mock import patch
 import httpx
 
 from app.alimail import AliMail
@@ -9,6 +10,21 @@ from tests.test_core import at
 
 
 class AdapterTest(unittest.TestCase):
+    def test_recovery_rebuilds_secure_client_or_invalidates_expired_token(self):
+        old=httpx.Client(transport=httpx.MockTransport(lambda r:httpx.Response(200)))
+        new=httpx.Client(transport=httpx.MockTransport(lambda r:httpx.Response(200)))
+        self.addCleanup(new.close)
+        api=AliMail({'client_id':'id','client_secret':'secret'},old)
+        api.token='test'; api.expires=99999
+        with patch('app.alimail.httpx.Client',return_value=new) as factory:
+            api.recover('reconnect')
+        self.assertTrue(old.is_closed); self.assertIs(api.client,new)
+        self.assertFalse(factory.call_args.kwargs['follow_redirects'])
+        self.assertFalse(factory.call_args.kwargs['trust_env'])
+        self.assertEqual(api.token,'test')
+        api.recover('refresh_token')
+        self.assertEqual(api.token,''); self.assertEqual(api.expires,0)
+
     def test_ali_read_preserves_selected_message_details(self):
         message={
             'id':'m1','mailId':'m1','subject':'客户开通咨询',

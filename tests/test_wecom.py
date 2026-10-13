@@ -109,12 +109,17 @@ class WeComTest(unittest.TestCase):
 
     def test_rejected_mentions_never_send(self):
         sender = self.sender()
-        for members in ([], None, 'LiHan', ['@all'], ['ALL'], ['all'], ['@All'],
+        for members in (None, 'LiHan', ['@all'], ['ALL'], ['all'], ['@All'],
                         ['LiHan', '@all'], ['a b'], ['含中文'], ['a' * 65], [1], ['']):
             with self.subTest(members=members), self.assertRaises(self.wecom.WeComError) as caught:
                 sender.send_text('消息', members)
             self.assertEqual(caught.exception.code, 'rejected')
         self.assertEqual(self.requests, [])
+
+    def test_system_text_can_be_sent_without_any_mention(self):
+        self.sender().send_text('运行记录',[])
+        content=json.loads(self.requests[0].content)['text']
+        self.assertEqual(content,{'content':'运行记录'})
 
     def test_disabled_sender_and_invalid_content_never_send(self):
         sender = self.sender(config={'enabled': False, 'webhook': WEBHOOK})

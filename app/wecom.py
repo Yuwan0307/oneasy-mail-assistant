@@ -54,7 +54,7 @@ class WeComSender:
     def send_text(self, text, userids, identity=''):
         if not self.config['enabled'] or not isinstance(text, str):
             raise WeComError('rejected')
-        if not isinstance(userids, (list, tuple)) or not userids:
+        if not isinstance(userids, (list, tuple)):
             raise WeComError('rejected')
         if any(not isinstance(value, str) or not _USERID.fullmatch(value)
                or value.lower() in {'all', '@all'} for value in userids):
@@ -66,8 +66,8 @@ class WeComSender:
         if len(raw) > 2048:
             available = 2048 - len(_LONG_CONTENT.encode('utf-8'))
             text = raw[:available].decode('utf-8', errors='ignore') + _LONG_CONTENT
-        payload = {'msgtype': 'text', 'text': {
-            'content': text, 'mentioned_list': list(dict.fromkeys(userids))}}
+        payload = {'msgtype': 'text', 'text': {'content': text}}
+        if userids: payload['text']['mentioned_list'] = list(dict.fromkeys(userids))
         try:
             if self.client is not None:
                 response = self.client.post(self.config['webhook'], json=payload,

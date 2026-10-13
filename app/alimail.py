@@ -14,6 +14,14 @@ class AliMail:
         self.token=''
         self.expires=0
 
+    def recover(self, action):
+        if action=='reconnect':
+            previous=self.client
+            self.client=httpx.Client(timeout=30,follow_redirects=False,trust_env=False)
+            previous.close()
+        elif action=='refresh_token':
+            self.token=''; self.expires=0
+
     def request(self, method, path, **kwargs):
         for attempt in range(2):
             if time.time() >= self.expires:

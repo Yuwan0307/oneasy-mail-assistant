@@ -49,10 +49,10 @@ class GroupReportsTest(unittest.TestCase):
         self.group.append(content)
         return httpx.Response(200,json={'errcode':0,'errmsg':'ok'})
 
-    def add(self,subject='待复核广告',account='service@oneasy.cc',long=False):
+    def add(self,subject='待复核广告',account='service@oneasy.cc',long=False,category='digest'):
         with patch('app.store.now',return_value=at('2026-10-09T12:00')):
             item=self.db.ingest(Mail(account,subject,at('2026-10-09T12:00'),subject,
-                'client@example.com','广告'),Decision('digest','中文🙂说明'*200 if long else '完整摘要','非业务邮件'))
+                'client@example.com','广告'),Decision(category,'中文🙂说明'*200 if long else '完整摘要','非业务邮件'))
         return item
 
     def schedule(self,when='2026-10-09T18:00'):
@@ -75,7 +75,8 @@ class GroupReportsTest(unittest.TestCase):
     def test_daily_tick_queues_both_channels_and_each_owner_is_mentioned_separately(self):
         self.db.save_person('other','同事','other@example.com',userid='Other')
         self.db.change_owners('service@oneasy.cc',['lihan','other'],'admin')
-        self.add('共有业务'); self.add('仅李涵业务','partner@oneasy.cc')
+        self.add('共有业务',category='info'); self.add('仅李涵业务','partner@oneasy.cc',category='info')
+        with self.db.tx() as db: db.execute("UPDATE notices SET state='sent' WHERE kind='initial'")
         with patch('app.worker.now',return_value=at('2026-10-09T18:00')):
             self.worker.tick()
         self.finish()
@@ -101,7 +102,7 @@ class GroupReportsTest(unittest.TestCase):
         for index,part in enumerate(self.group,1):
             content=part['content']
             self.assertLessEqual(len(content.encode('utf-8')),2048)
-            self.assertEqual(part['mentioned_list'],['LiHan'])
+            self.assertNotIn('mentioned_list',part)
             prefix,body=content.split('\n',1)
             self.assertIn(f'第{index}/{len(self.group)}条',prefix)
             self.assertIn('2026-10-09',prefix)
@@ -219,7 +220,12 @@ class GroupReportsTest(unittest.TestCase):
         self.db.change_owners('service@oneasy.cc',['lihan'],'admin')
         self.assertEqual(self.notice(owner='other')['state'],'cancelled')
         self.finish()
-        self.assertTrue(all(part['mentioned_list']==['LiHan'] for part in self.group))
+        self.assertTrue(all(not part.get('mentioned_list') for part in self.group))
+
+    def test_daily_report_with_only_system_records_has_no_mentions(self):
+        self.schedule(); self.finish()
+        self.assertTrue(self.group)
+        self.assertTrue(all('mentioned_list' not in part for part in self.group))
 
     def test_disabled_group_or_removed_member_cancels_group_and_preserves_original_email(self):
         for case in ('disabled','missing_member'):

@@ -42,7 +42,7 @@ class SystemAlertTest(unittest.TestCase):
         self.alerts(); self.sync()
         self.assertEqual(len(self.group.messages),1)
         text,userids,_=self.group.messages[0]
-        self.assertEqual(userids,['LiHan'])
+        self.assertEqual(userids,[])
         for account in MAILBOXES: self.assertEqual(text.count(account),1)
         self.assertIn('新邮件提醒可能延迟',text)
         self.assertNotIn('mailbox_scan_failed',text)
@@ -53,6 +53,7 @@ class SystemAlertTest(unittest.TestCase):
         self.assertEqual(len(self.group.messages),1)
 
     def test_scan_round_waits_for_all_failures_and_records_safe_error_type(self):
+        self.worker.mail_api=object()  # poll_mailbox is replaced below; a connection is configured.
         def scan(box):
             self.worker.sync()
             self.assertEqual(self.group.messages,[])
@@ -63,7 +64,7 @@ class SystemAlertTest(unittest.TestCase):
              patch.object(self.db,'backup'), patch.object(self.db,'archive'):
             self.worker.tick()
         self.sync()
-        self.assertEqual(len(self.group.messages),1)
+        self.assertEqual(len(self.group.messages),0)
         records=self.db.rows("SELECT detail FROM audit WHERE action='mailbox_scan_failed'")
         self.assertEqual(len(records),6)
         self.assertTrue(all(json.loads(r['detail']).get('failure_type')=='connection' for r in records))
@@ -82,7 +83,7 @@ class SystemAlertTest(unittest.TestCase):
         for account in MAILBOXES: self.assertIn(account,self.server.messages[0].get_content())
         self.assertEqual({n['state'] for n in self.db.rows("SELECT * FROM notices")},{'sent'})
 
-    def test_group_mentions_current_owners_and_missing_member_gets_own_email_summary(self):
+    def test_system_group_never_mentions_owners_and_needs_no_member_id(self):
         self.db.save_person('other','同事','other@example.com',userid='Other')
         self.db.save_person('email','邮件同事','email@example.com')
         self.db.change_owners('service@oneasy.cc',['lihan','other','email'],'admin')
@@ -91,11 +92,9 @@ class SystemAlertTest(unittest.TestCase):
         self.db.change_owners('legal@oneasy.cc',['lihan'],'admin')
         for minute in range(1,8): self.sync(f'2026-10-09T12:0{minute}')
         self.assertEqual(len(self.group.messages),1)
-        self.assertCountEqual(self.group.messages[0][1],['LiHan','Other'])
-        self.assertEqual(len(self.server.messages),1)
-        self.assertEqual(self.server.messages[0]['To'],'email@example.com')
-        text=self.server.messages[0].get_content()
-        self.assertIn('service@oneasy.cc',text); self.assertNotIn('legal@oneasy.cc',text)
+        self.assertEqual(self.group.messages[0][1],[])
+        self.assertEqual(len(self.server.messages),0)
+        self.assertTrue(self.db.rows("SELECT 1 FROM notices WHERE owner='email' AND state='cancelled'"))
 
     def test_legacy_pending_notices_are_merged_and_pause_still_blocks_send(self):
         self.alerts()

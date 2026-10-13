@@ -117,8 +117,9 @@ def system_notice_text(code,accounts,detected):
     lines=['【运行提醒 · '+labels[code]+'】','发现时间：'+display_time(detected)+'（北京时间）']
     if accounts: lines.extend([f'受影响邮箱（{len(accounts)}个）：',*['• '+account for account in sorted(accounts)]])
     if code=='mailbox_scan_failed':
-        lines.extend(['情况：上述邮箱的一次扫描未完成，相关新邮件提醒可能延迟。',
-                      '助手会自动重试；您仍可直接登录邮箱查看和处理来信。'])
+        lines.extend(['情况：上述邮箱扫描仍未成功，相关新邮件提醒可能延迟。',
+                      '助手已记录诊断结果，将继续尝试恢复并检查扫描结果。',
+                      '如涉及权限或配置问题，需管理员处理；您仍可直接登录原邮箱处理来信。'])
     else:
         lines.append('请登录原邮箱核对相关邮件，并在助手中查看运行状态及操作记录。')
     lines.append('同类异常已合并提醒；若持续异常，请联系管理员检查。')
@@ -145,6 +146,8 @@ def group_report_text(report,owner_name):
         '生成／更新汇总':('report_created','report_rebuilt'),
         '设置或负责人调整':('wecom_changed','smtp_changed','connections_changed','person_changed','person_removed','owners_changed','mailbox_changed'),
         '数据备份／归档':('backup_completed','monthly_archive_updated'),
+        '扫描自动诊断／恢复尝试':('scan_repair_scheduled','scan_repair_attempt'),
+        '扫描恢复成功':('scan_recovered',),
         '监控或窗口操作':('activated','monitoring_paused','monitoring_resumed','desktop_hide_requested','desktop_hide_accepted','desktop_exit_requested','desktop_exit_accepted'),
     }
     rows=[]

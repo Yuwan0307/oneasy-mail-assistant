@@ -10,6 +10,7 @@ from .ai import CloudAI
 from .notifications import item_text, report_text, message_parts, group_notice_text, group_system_text, group_report_parts, system_notice_text
 from .smtp import SMTPSender, error_text
 from .wecom import WeComSender
+from .recovery import diagnose
 
 
 class Worker:
@@ -49,6 +50,10 @@ class Worker:
             if old and old.config==value: continue
             setattr(self,name,cls(value) if value.get(key) else None)
             if old: self.retired_clients.append(old.client)
+            if name=='mail_api':
+                for box in self.db.rows('SELECT account FROM mailboxes'):
+                    state=self.db.get('scan_repair:'+box['account'])
+                    if state: self.db.set('scan_repair:'+box['account'],{**state,'retry_at':now().isoformat()})
 
     def send_group(self,notice,item,text,identity,current,candidates=None):
         # One group message per reminder; durable SMTP routing survives a restart.
@@ -60,11 +65,13 @@ class Worker:
             owners=self.db.owners(account) if account else None
             candidates=[n for n in candidates if owners is None or n['owner'] in owners]
         if not candidates: return False
+        mention=notice['kind']!='system'
+        userids=list(dict.fromkeys(n['userid'] for n in candidates)) if mention else []
         self.db.set('last_send',current.timestamp())
         for row in candidates:
-            self.db.log('notification_attempt',notice['item_id'],{'notice':row['id'],'channel':'wecom','userid':row['userid']})
+            self.db.log('notification_attempt',notice['item_id'],{'notice':row['id'],'channel':'wecom','userid':row['userid'] if mention else ''})
         try:
-            self.wecom_sender.send_text(text,list(dict.fromkeys(n['userid'] for n in candidates)),identity)
+            self.wecom_sender.send_text(text,userids,identity)
         except Exception:
             # Never persist transport exceptions, URLs, keys or platform response bodies.
             with self.db.tx() as db:
@@ -75,7 +82,7 @@ class Worker:
         with self.db.tx() as db:
             for row in candidates:
                 db.execute("UPDATE notices SET state='sent',channel='wecom',part=1,attempts=attempts+1,retry_at=?,last_error='' WHERE id=?",(current.isoformat(),row['id']))
-                self.db.log('notification_sent',notice['item_id'],{'notice':row['id'],'channel':'wecom','userid':row['userid']},db=db)
+                self.db.log('notification_sent',notice['item_id'],{'notice':row['id'],'channel':'wecom','userid':row['userid'] if mention else ''},db=db)
         return True
 
     @staticmethod
@@ -103,8 +110,8 @@ class Worker:
         def text_for(selected):
             accounts={json.loads(row['payload']).get('account') for row in selected}-{None,''}
             return system_notice_text(code,accounts,min(row['due'] for row in selected))
-        group=[row for row in rows if row['userid'] and row['channel']=='']
-        if self.wecom_sender and seed['userid'] and seed['channel']=='' and group:
+        group=[row for row in rows if row['channel']=='']
+        if self.wecom_sender and seed['channel']=='' and group:
             if self.send_group(notice,None,text_for(group),notice['id'],current,candidates=group): return
         # One fallback email per current owner, covering all their affected mailboxes.
         selected=[row for row in rows if row['owner']==seed['owner']]
@@ -218,8 +225,9 @@ class Worker:
                     parts=message_parts('负责人：'+owner_name+'\n'+report_text(report),identity,limit=2048)
                 self.db.set('last_send',current.timestamp())
                 attempts+=1
-                self.db.log('notification_attempt',detail={'notice':notice['id'],'channel':'wecom','part':part+1,'total':len(parts),'revision':revision,'userid':people[0]['userid']})
-                self.wecom_sender.send_text(parts[part],[people[0]['userid']],identity+':'+str(part))
+                userids=[people[0]['userid']] if any(i['category'] in {'action','info','human'} for i in report['items']) else []
+                self.db.log('notification_attempt',detail={'notice':notice['id'],'channel':'wecom','part':part+1,'total':len(parts),'revision':revision,'userid':people[0]['userid'] if userids else ''})
+                self.wecom_sender.send_text(parts[part],userids,identity+':'+str(part))
                 part+=1
                 state='sent' if part==len(parts) else 'pending'
             except Exception:
@@ -231,17 +239,59 @@ class Worker:
             self.db.log('notification_failed' if error else 'notification_'+state,
                         detail={'notice':notice['id'],'channel':'wecom','part':part,'attempt':attempts,'reason':reason},db=db)
 
-    def alert(self,code,account='',failure=None):
+    def alert(self,code,account='',failure=None,record=True):
         detail={'account':account}
         if failure is not None:
             detail['failure_type']='timeout' if isinstance(failure,httpx.TimeoutException) else 'connection' if isinstance(failure,httpx.TransportError) else 'http_status' if isinstance(failure,httpx.HTTPStatusError) else 'unexpected'
             if isinstance(failure,httpx.HTTPStatusError): detail['http_status']=failure.response.status_code
-        self.db.log(code,detail=detail)
+        if record: self.db.log(code,detail=detail)
         day=now().date().isoformat()
         with self.db.tx() as db:
             owners=self.db.owners(account,db) if account else [r[0] for r in db.execute('SELECT DISTINCT person_id FROM mailbox_owners')]
             for owner in owners:
-                self.db.notice(db,f'alert:{code}:{account}:{day}:{owner}',owner,'system',payload={'code':code,'account':account,'text':f'邮件助手需要检查：{code} {account}。请在管理页面查看运行状态。'})
+                identity=f'alert:{code}:{account}:{day}:{owner}'
+                self.db.notice(db,identity,owner,'system',payload={'code':code,'account':account,'text':f'邮件助手需要检查：{code} {account}。请在管理页面查看运行状态。'})
+                if code=='mailbox_scan_failed':
+                    db.execute("UPDATE notices SET state='pending',due=?,retry_at='',channel='',attempts=0,last_error='' WHERE id=? AND state='cancelled' AND part=0 AND last_error='scan_recovered'",(now().isoformat(),identity))
+
+    def scan_mailbox(self,box):
+        account=box['account']; key='scan_repair:'+account
+        with self.lock:
+            if self.inactive() or not self.mail_api or not self.db.get('activated'): return
+            state=self.db.get(key)
+            if state and stamp(state['retry_at'])>now(): return
+        try:
+            with self.lock:
+                if self.inactive(): return
+                if state:
+                    self.db.log('scan_repair_attempt',detail={'account':account,'action':state['action'],'reason':state['reason']})
+                    if state['action'] in {'reconnect','refresh_token'}:
+                        self.mail_api.recover(state['action'])
+            complete=self.poll_mailbox(box)
+        except Exception as failure:
+            with self.lock:
+                if self.inactive(): return
+                current=now(); failures=(state or {}).get('failures',0)+1
+                diagnosis=diagnose(failure,failures,current)
+                retry=current+timedelta(seconds=diagnosis.pop('delay'))
+                detail={'account':account,**diagnosis,'failures':failures,'retry_at':retry.isoformat()}
+                self.db.set(key,detail)
+                self.db.log('mailbox_scan_failed',detail=detail)
+                self.db.log('scan_repair_scheduled',detail=detail)
+                if failures>=3 or diagnosis['action']=='manual':
+                    self.alert('mailbox_scan_failed',account,record=False)
+            return
+        with self.lock:
+            if not complete or self.inactive(): return
+            if state:
+                self.db.set(key,None)
+                self.db.log('scan_recovered',detail={'account':account,'result':'重新扫描成功，已恢复正常监控','failures':state['failures']})
+            # A recovered mailbox must not send an old queued failure warning.
+            with self.db.tx() as db:
+                for row in db.execute("SELECT * FROM notices WHERE kind='system' AND state='pending'").fetchall():
+                    if self.system_code(row)=='mailbox_scan_failed' and json.loads(row['payload']).get('account')==account:
+                        db.execute("UPDATE notices SET state='cancelled',last_error='scan_recovered' WHERE id=?",(row['id'],))
+                        self.db.log('notification_cancelled',detail={'notice':row['id'],'reason':'scan_recovered'},db=db)
 
     def poll_mailbox(self,box):
         with self.lock:
@@ -297,7 +347,9 @@ class Worker:
                     with self.db.tx() as db:
                         db.execute('INSERT OR IGNORE INTO seen VALUES(?,?,?)',(box['account'],mid,received.isoformat()))
         with self.lock:
-            if not self.inactive(): self.db.set('last_scan:'+box['account'],now().isoformat())
+            if not self.inactive():
+                self.db.set('last_scan:'+box['account'],now().isoformat())
+                return True
 
     def moves(self):
         if not self.mail_api or self.inactive(): return
@@ -350,8 +402,7 @@ class Worker:
         try:
             for box in self.db.rows('SELECT * FROM mailboxes'):
                 if self.inactive(): return
-                try: self.poll_mailbox(box)
-                except Exception as failure: self.alert('mailbox_scan_failed',box['account'],failure)
+                self.scan_mailbox(box)
             self.moves()
         finally:
             self.scanning.clear()
