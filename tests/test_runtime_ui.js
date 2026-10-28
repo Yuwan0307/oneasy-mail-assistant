@@ -284,3 +284,13 @@ test('pending review count and historical reviewed badge reflect different state
         sender: 'vendor@example.com', received: '2026-10-28T13:00:00+08:00', reason: '已人工核对' });
     assert.equal(mail.children[0].children[1].textContent, '已复核');
 });
+
+test('ignored marketing is not counted as business and remains correctable in reports', async () => {
+    const page = await dashboard({ pending_review: 0, counts: [{ category: 'action', n: 1 }, { category: 'marketing', n: 4 }] });
+    const cards = page.elements.get('#content').children[0];
+    assert.equal(cards.children[1].children[1].textContent, '1');
+    const mail = page.renderMail({ id: 'offer', version: 1, account: 'support@oneasy.cc', category: 'marketing',
+        subject: '产品推广', summary: '已忽略', sender: 'sales@example.com', received: '2026-10-28T12:00:00+08:00', reason: '无客户事项' });
+    assert.equal(mail.children[0].children[1].textContent, '营销推广·已忽略');
+    assert.ok(mail.children.flatMap(child => child.children).some(child => child.textContent === '更正为业务邮件'));
+});

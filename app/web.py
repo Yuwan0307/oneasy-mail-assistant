@@ -127,7 +127,7 @@ def create_app(db,config,run_worker=False,desktop_control=False,desktop_port=876
     @app.get('/api/items')
     def items(request:Request,view:str='all',offset:int=0,account:str=''):
         auth(request)
-        where={'business':"category!='digest'",'review':"category='digest' AND reviewed=0",'all':'1'}.get(view,'1')
+        where={'business':"category IN ('action','info','human')",'review':"category='digest' AND reviewed=0",'all':'1'}.get(view,'1')
         args=[]
         if account: where+=' AND account=?'; args.append(account)
         return {'total':db.rows('SELECT count(*) n FROM items WHERE '+where,args)[0]['n'],

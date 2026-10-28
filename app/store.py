@@ -156,10 +156,10 @@ class Store:
             db.executemany('INSERT INTO item_owners(item_id,person_id,report_at) VALUES(?,?,?)',
                            [(item_id,p,values['report_at']) for p in self.owners(mail.account,db)])
             self.log('classified',item_id,{'category':decision.category,'reason':values['reason'],'model':decision.model,'rule':RULE_VERSION},db=db)
-            if decision.category != 'digest':
+            if decision.category in {'action','info','human'}:
                 self.notify_item(db,'initial',item_id,1)
             else:
-                self.log('instant_skipped',item_id,{'reason':'daily_review'},db=db)
+                self.log('instant_skipped',item_id,{'reason':'marketing_ignored' if decision.category=='marketing' else 'daily_review'},db=db)
         return item_id
 
     def review(self, item_id, version, actor, action, connection=None):

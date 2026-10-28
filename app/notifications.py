@@ -26,7 +26,7 @@ def message_parts(text, notice_id, limit=None):
 
 
 def item_text(item,review_status=False):
-    labels={'action':'需要处理','human':'请人工查看','info':'业务信息','digest':'未即时提醒，供人工复核'}
+    labels={'action':'需要处理','human':'请人工查看','info':'业务信息','digest':'未即时提醒，供人工复核','marketing':'已忽略推广，无需复核'}
     if review_status and item['category']=='digest' and item.get('reviewed'): labels['digest']='已复核'
     lines=[f"邮箱：{item['account']}",f"分类：{labels[item['category']]}",f"主题：{item['subject']}",
            f"发件人：{item['sender']}",f"收到：{item['received']}",f"摘要：{item['summary']}",f"依据：{item['reason']}"]
@@ -43,6 +43,8 @@ def report_text(report, legacy=False,review_status=True):
            f"新增邮件 {len(report['items'])} 封；其中未即时提醒 {sum(i['category']=='digest' for i in report['items'])} 封。"]
     if checked:
         lines[2]=f"本期归集 {len(report['items'])} 封；待人工复核 {len(review)} 封；已复核 {len(checked)} 封。"
+    ignored=sum(i['category']=='marketing' for i in report['items'])
+    if ignored: lines[2]=lines[2][:-1]+f'；已忽略推广 {ignored} 封。'
     if legacy or (review if status else report['items']):
         lines.append('请人工检查是否遗漏有价值的邮件；本系统不记录工作完成状态。')
     for account in sorted({i['account'] for i in report['items']}):
@@ -138,13 +140,15 @@ def group_report_text(report,owner_name,legacy=False,review_status=True):
     status=review_status and not legacy
     items=report['items']; review=[i for i in items if i['category']=='digest' and (not status or not i.get('reviewed'))]
     checked=[i for i in items if i['category']=='digest' and i.get('reviewed')] if status else []
-    business=[i for i in items if i['category']!='digest']
+    business=[i for i in items if i['category'] in {'action','info','human'}]
+    ignored=[i for i in items if i['category']=='marketing']
     blocks=[f"负责人：{owner_name}\n统计时段：{display_time(report['since'])} 至 {display_time(report['cutoff'])}（北京时间）\n"
             f"本期新增 {len(items)} 封：业务来信 {len(business)} 封，待人工复核 {len(review)} 封。"]
     if report.get('delayed'): blocks.append('本次为延迟补发，以下内容对应上述统计时段。')
     if checked: blocks[0]=blocks[0].replace('本期新增','本期归集')[:-1]+f'，已复核 {len(checked)} 封。'
-    labels={'action':'需关注','human':'请人工查看','info':'业务信息','digest':'待人工复核'}
-    for heading,group in [('业务来信',business),('待人工复核',review),('已复核记录',checked)]:
+    if ignored: blocks[0]=blocks[0][:-1]+f'，已忽略推广 {len(ignored)} 封。'
+    labels={'action':'需关注','human':'请人工查看','info':'业务信息','digest':'待人工复核','marketing':'已忽略，无需复核'}
+    for heading,group in [('业务来信',business),('待人工复核',review),('已复核记录',checked),('已忽略推广',ignored)]:
         if not group: continue
         blocks.append(heading+f'（{len(group)}封）'+('\n以下邮件未即时提醒，请核对是否遗漏有价值的来信。' if heading=='待人工复核' else ''))
         for index,item in enumerate(group,1):

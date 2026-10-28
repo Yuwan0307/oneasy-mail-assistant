@@ -1,5 +1,5 @@
 const $ = s => document.querySelector(s);
-const labels = { action: '业务请求', human: '转人工', info: '信息通知', digest: '每日复核' };
+const labels = { action: '业务请求', human: '转人工', info: '信息通知', digest: '每日复核', marketing: '营销推广·已忽略' };
 const titles = { overview: '运行概览', business: '业务来信', review: '邮件人工复核', reports: '每日汇总', audit: '操作记录', settings: '邮箱与负责人', configuration: '设置', connections: '更改系统连接', smtp: '更改提醒发件箱', wecom: '企业微信群提醒', people: '负责人管理' };
 
 let tab = 'overview', offset = 0, state;
@@ -175,7 +175,7 @@ function card(item) {
         await load();
     };
 
-    if (item.category === 'digest') actions.append(button('更正为业务邮件', act('needs_action'), true));
+    if (['digest','marketing'].includes(item.category)) actions.append(button('更正为业务邮件', act('needs_action'), true));
     if (item.folder !== item.original_folder) actions.append(button('恢复原位置', act('restore'), true));
     
     const a = el('a', '打开原邮箱处理');
@@ -233,7 +233,7 @@ async function load() {
         const cards = el('div', '', 'cards');
         const overviewData = [
             ['监管邮箱', 6, '客户来信统一记录'],
-            ['业务来信', state.counts.filter(x => x.category !== 'digest').reduce((n, x) => n + x.n, 0), '单向提醒，不跟踪人工完成状态'],
+            ['业务来信', state.counts.filter(x => ['action','info','human'].includes(x.category)).reduce((n, x) => n + x.n, 0), '单向提醒，不跟踪人工完成状态'],
             ['待人工复核', state.pending_review ?? state.counts.filter(x => x.category === 'digest').reduce((n, x) => n + x.n, 0), '已复核记录保留在每日汇总与历史记录中']
         ];
         for (const [name, num, desc] of overviewData) {
@@ -304,7 +304,7 @@ async function showReport(id) {
     const items = data.items || [...(data.open || []), ...(data.review || [])];
     const p = panel(data.day + ' 每日汇总');
     p.append(
-        el('p', `本期邮件 ${items.length} 封；待复核 ${(data.review || []).length} 封；已复核 ${items.filter(item => item.category==='digest' && item.reviewed).length} 封；操作 ${data.operations.length} 条。`),
+        el('p', `本期邮件 ${items.length} 封；待复核 ${(data.review || []).length} 封；已复核 ${items.filter(item => item.category==='digest' && item.reviewed).length} 封；已忽略推广 ${items.filter(item => item.category==='marketing').length} 封；操作 ${data.operations.length} 条。`),
         el('p', '供人工查阅，不需要确认或标记完成。', 'muted')
     );
     target.append(p);

@@ -274,7 +274,7 @@ function mailboxEditor(target, account) {
     folders.placeholder = '留空监控收件箱、垃圾箱及全部自定义文件夹';
     const move = el('input');
     move.type = 'checkbox'; move.checked = !!box.move_enabled;
-    const label = el('label', '开启广告等邮件自动移入“助手待复核”');
+    const label = el('label', '开启待复核邮件自动移入“助手待复核”（已忽略推广除外）');
     label.prepend(move);
     form.append(label);
     autoSave(form, '/api/mailbox', () => ({

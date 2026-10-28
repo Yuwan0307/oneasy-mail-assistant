@@ -174,7 +174,7 @@ class MacDeploymentTest(unittest.TestCase):
             runtime.side_effect = None
             deployer.deploy(package, 'colleague', installed, plist, self.root / 'Oneasy.app')
         self.assertEqual((installed / 'data/config.json').read_bytes(), b'configuration retained')
-        self.assertEqual(json.loads((installed / 'deployment.json').read_text())['version'], '1.6.7')
+        self.assertEqual(json.loads((installed / 'deployment.json').read_text())['version'], '1.6.8')
 
 
 if __name__ == '__main__': unittest.main()

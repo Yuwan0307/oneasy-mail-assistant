@@ -13,7 +13,7 @@ from urllib.parse import parse_qsl,unquote,urlsplit
 import xml.etree.ElementTree as ET
 
 TZ = timezone(timedelta(hours=8), 'Asia/Shanghai')
-RULE_VERSION = 'oneasy-notify-2'
+RULE_VERSION = 'oneasy-notify-3'
 RISK_NOTICE = re.compile(r'欠费|即将到期|服务中断|安全告警|异常登录|投递失败|退信|delivery failed|undeliverable',re.I)
 MAILBOXES = dict(zip(
     [f'{name}@oneasy.cc' for name in ['service','partner','support','noreply','operation','legal']],
@@ -47,7 +47,7 @@ class Mail:
 
 @dataclass
 class Decision:
-    category: str  # action, info, digest, human
+    category: str  # action, info, digest, human, marketing (ignored)
     summary: str
     reason: str
     deadline: datetime | None = None
@@ -189,17 +189,20 @@ def classify(mail, ai):
     try:
         safe_mail = Mail(mail.account, mail.provider_id, mail.received, mail.subject, mail.sender, text, [], mail.folder, mail.stable_id)
         result = ai(safe_mail)
-        if result.category not in {'action','info','digest','human'}:
+        if result.category not in {'action','info','digest','human','marketing'}:
             raise ValueError('分类无效')
         if sensitive('\n'.join([result.summary,result.reason,result.hints,result.evidence])):
             return Decision('human','分析结果需要人工查看','结果包含敏感信息', sensitive=True)
-        if result.category=='digest' and result.evidence and result.evidence not in text:
+        if result.category in {'digest','marketing'} and result.evidence and result.evidence not in text:
             # Models sometimes join several quotes; retain one verifiable original span.
             quotes=[line.strip() for line in result.evidence.splitlines() if len(line.strip())>=20 and line.strip() in text]
             if quotes: result.evidence=max(quotes,key=len)
-        if result.category == 'digest' and (result.confidence < .95 or not result.evidence or result.evidence not in text):
+        if result.category in {'digest','marketing'} and (result.confidence < .95 or not result.evidence or result.evidence not in text):
             result.category = 'human'
             result.reason = '无法可靠确认与业务无关，请人工复核'
+        if result.category=='marketing':
+            result.deadline=None
+            result.hints=''
         if result.deadline and (not result.evidence or result.evidence not in text):
             result.deadline = None
             result.reason += '；截止时间依据不足，需人工确认'

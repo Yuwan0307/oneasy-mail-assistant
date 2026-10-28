@@ -94,6 +94,14 @@ class GroupReportsTest(unittest.TestCase):
         self.deliver(500)
         self.assertEqual(len(self.group),2)
 
+    def test_ignored_marketing_report_does_not_mention_owner_or_request_review(self):
+        self.add('已确认的产品推广',category='marketing'); self.schedule(); self.finish()
+        self.assertEqual(len(self.group),1)
+        self.assertNotIn('mentioned_list',self.group[0])
+        self.assertIn('已忽略推广',self.group[0]['content'])
+        self.assertNotIn('请在原邮箱处理业务',self.group[0]['content'])
+        self.assertEqual(len(self.emails),1)
+
     # A truncating transport call, dropped character, or missing prefix budget must fail.
     def test_complete_group_report_is_numbered_and_limited_including_utf8_prefix(self):
         self.add(long=True); self.schedule()

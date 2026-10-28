@@ -126,15 +126,16 @@ class MarketingRulesTest(unittest.TestCase):
         mail.body+='\n<html><head><title>阿里邮箱系统信模板</title><style>p{color:blue}</style></head><body>'+html+'</body></html>'
         self.assertEqual(classify(mail,None).category,'digest')
 
-    def test_marketing_creates_daily_review_without_instant_or_followup_notices(self):
+    def test_confirmed_marketing_is_archived_without_review_or_instant_notices(self):
         scratch=Path.cwd()/'.test-temp'; scratch.mkdir(exist_ok=True)
         with tempfile.TemporaryDirectory(dir=scratch) as directory:
             db=Store(Path(directory)/'test.db'); db.activate(at('2026-10-28T10:00'))
             mail=self.mail('Paid diagnosis offer.\nhttps://vendor.example/unsubscribe?token=opaque-value')
-            decision=classify(mail,lambda safe:Decision('digest','付费诊断推广','产品营销',evidence='Paid diagnosis offer.',confidence=.99))
+            decision=classify(mail,lambda safe:Decision('marketing','付费诊断推广','产品营销',evidence='Paid diagnosis offer.',confidence=.99))
             item=db.ingest(mail,decision)
             db.schedule(at('2026-10-28T18:00'))
-            self.assertEqual(db.item(item)['category'],'digest')
+            self.assertEqual(db.item(item)['category'],'marketing')
             self.assertEqual(db.rows("SELECT * FROM notices WHERE item_id=?",(item,)),[])
-            self.assertEqual([record['id'] for record in db.report('lihan','2026-10-28')['review']],[item])
+            self.assertEqual(db.report('lihan','2026-10-28')['review'],[])
+            self.assertIn(item,[record['id'] for record in db.report('lihan','2026-10-28')['items']])
             self.assertNotIn('opaque-value',str(db.rows('SELECT * FROM items'))+str(db.rows('SELECT * FROM audit')))
