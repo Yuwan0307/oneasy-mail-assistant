@@ -8,7 +8,7 @@ from contextlib import closing
 from pathlib import Path
 from .config import load_config
 
-VERSION = '1.6.6'
+VERSION = '1.6.7'
 
 
 def service_settings(root):

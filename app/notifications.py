@@ -25,8 +25,9 @@ def message_parts(text, notice_id, limit=None):
     return [f'【{code} · {i+1}/{len(pieces)}】\n{part}' for i,part in enumerate(pieces)]
 
 
-def item_text(item):
+def item_text(item,review_status=False):
     labels={'action':'需要处理','human':'请人工查看','info':'业务信息','digest':'未即时提醒，供人工复核'}
+    if review_status and item['category']=='digest' and item.get('reviewed'): labels['digest']='已复核'
     lines=[f"邮箱：{item['account']}",f"分类：{labels[item['category']]}",f"主题：{item['subject']}",
            f"发件人：{item['sender']}",f"收到：{item['received']}",f"摘要：{item['summary']}",f"依据：{item['reason']}"]
     if item.get('deadline'): lines.append('客户截止：'+item['deadline'])
@@ -34,14 +35,19 @@ def item_text(item):
     return '\n'.join(lines)
 
 
-def report_text(report, legacy=False):
+def report_text(report, legacy=False,review_status=True):
+    status=review_status and not legacy
+    review=[i for i in report['items'] if i['category']=='digest' and (not status or not i.get('reviewed'))]
+    checked=[i for i in report['items'] if i['category']=='digest' and i.get('reviewed')] if status else []
     lines=[f"邮件每日汇总 · {report['day']}",f"记录区间：{report['since']} 至 {report['cutoff']}",
-           f"新增邮件 {len(report['items'])} 封；其中未即时提醒 {len(report['review'])} 封。"]
-    if report['items'] or legacy:
+           f"新增邮件 {len(report['items'])} 封；其中未即时提醒 {sum(i['category']=='digest' for i in report['items'])} 封。"]
+    if checked:
+        lines[2]=f"本期归集 {len(report['items'])} 封；待人工复核 {len(review)} 封；已复核 {len(checked)} 封。"
+    if legacy or (review if status else report['items']):
         lines.append('请人工检查是否遗漏有价值的邮件；本系统不记录工作完成状态。')
     for account in sorted({i['account'] for i in report['items']}):
         lines.append('\n'+account)
-        lines.extend(item_text(i)+'\n' for i in report['items'] if i['account']==account)
+        lines.extend(item_text(i,review_status=status)+'\n' for i in report['items'] if i['account']==account)
     if legacy:
         lines.append(f"\n操作记录（{len(report['operations'])} 条）")
         lines.extend(f"{a['time']} {a['actor']} {a['action']} {a['item_id']} {a['detail']}" for a in report['operations'])
@@ -128,20 +134,26 @@ def system_notice_text(code,accounts,detected):
     return '\n'.join(lines)
 
 
-def group_report_text(report,owner_name,legacy=False):
-    items=report['items']; review=[i for i in items if i['category']=='digest']
+def group_report_text(report,owner_name,legacy=False,review_status=True):
+    status=review_status and not legacy
+    items=report['items']; review=[i for i in items if i['category']=='digest' and (not status or not i.get('reviewed'))]
+    checked=[i for i in items if i['category']=='digest' and i.get('reviewed')] if status else []
     business=[i for i in items if i['category']!='digest']
     blocks=[f"负责人：{owner_name}\n统计时段：{display_time(report['since'])} 至 {display_time(report['cutoff'])}（北京时间）\n"
             f"本期新增 {len(items)} 封：业务来信 {len(business)} 封，待人工复核 {len(review)} 封。"]
     if report.get('delayed'): blocks.append('本次为延迟补发，以下内容对应上述统计时段。')
+    if checked: blocks[0]=blocks[0].replace('本期新增','本期归集')[:-1]+f'，已复核 {len(checked)} 封。'
     labels={'action':'需关注','human':'请人工查看','info':'业务信息','digest':'待人工复核'}
-    for heading,group in [('业务来信',business),('待人工复核',review)]:
+    for heading,group in [('业务来信',business),('待人工复核',review),('已复核记录',checked)]:
         if not group: continue
         blocks.append(heading+f'（{len(group)}封）'+('\n以下邮件未即时提醒，请核对是否遗漏有价值的来信。' if heading=='待人工复核' else ''))
         for index,item in enumerate(group,1):
-            blocks.append(f"{index}. {MAILBOXES.get(item['account'],'监管邮箱')} · {labels[item['category']]}\n"+group_item_text(item))
+            label='已复核' if heading=='已复核记录' else labels[item['category']]
+            blocks.append(f"{index}. {MAILBOXES.get(item['account'],'监管邮箱')} · {label}\n"+group_item_text(item))
     if not legacy:
-        if items: blocks.append('请在原邮箱处理业务；未即时提醒的邮件请人工复核。完整操作记录和分类依据可在邮件助手中查看。')
+        if business or review:
+            prompt='请在原邮箱处理业务；未即时提醒的邮件请人工复核。' if review or not status else '请在原邮箱处理业务。'
+            blocks.append(prompt+'完整操作记录和分类依据可在邮件助手中查看。')
         return '\n\n'.join(blocks)
     # Only already-started pre-upgrade reports keep their original fragment boundaries.
     counts=Counter(a['action'] for a in report['operations'])
@@ -171,8 +183,8 @@ def group_report_text(report,owner_name,legacy=False):
     return '\n\n'.join(blocks)
 
 
-def group_report_parts(report,owner_name,legacy=False):
-    text=group_report_text(report,owner_name,legacy=legacy)
+def group_report_parts(report,owner_name,legacy=False,review_status=True):
+    text=group_report_text(report,owner_name,legacy=legacy,review_status=review_status)
     title='每日邮件汇总 · '+report['day']+(' · 更新版' if report.get('revision') else '')
     count=1
     while True:

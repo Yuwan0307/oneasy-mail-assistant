@@ -311,7 +311,7 @@ class Store:
                     and (not a['item_id'] or db.execute('SELECT 1 FROM item_owners WHERE item_id=? AND person_id=?',(a['item_id'],owner)).fetchone())]
         person=db.execute('SELECT name FROM people WHERE id=?',(owner,)).fetchone()
         return dict(mode='notification',owner=owner,owner_name=person[0] if person else owner,day=cutoff.date().isoformat(),since=since.isoformat(),cutoff=cutoff.isoformat(),
-                    items=items,review=[i for i in items if i['category']=='digest'],operations=operations)
+                    items=items,review=[i for i in items if i['category']=='digest' and not i['reviewed']],operations=operations)
 
     def schedule(self, current, group_reports=False):
         current = stamp(current)

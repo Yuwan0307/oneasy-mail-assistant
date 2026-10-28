@@ -154,7 +154,7 @@ function card(item) {
     const head = el('div', '', 'row between');
     head.append(
         el('span', item.account, 'muted'),
-        el('span', labels[item.category], 'badge' + (item.category === 'human' ? ' warn' : ''))
+        el('span', item.category==='digest' && item.reviewed ? '已复核' : labels[item.category], 'badge' + (item.category === 'human' ? ' warn' : ''))
     );
     
     c.append(
@@ -234,7 +234,7 @@ async function load() {
         const overviewData = [
             ['监管邮箱', 6, '客户来信统一记录'],
             ['业务来信', state.counts.filter(x => x.category !== 'digest').reduce((n, x) => n + x.n, 0), '单向提醒，不跟踪人工完成状态'],
-            ['每日复核邮件', state.counts.filter(x => x.category === 'digest').reduce((n, x) => n + x.n, 0), '包含全部非即时提醒邮件']
+            ['待人工复核', state.pending_review ?? state.counts.filter(x => x.category === 'digest').reduce((n, x) => n + x.n, 0), '已复核记录保留在每日汇总与历史记录中']
         ];
         for (const [name, num, desc] of overviewData) {
             const c = el('div', '', 'card');
@@ -304,7 +304,7 @@ async function showReport(id) {
     const items = data.items || [...(data.open || []), ...(data.review || [])];
     const p = panel(data.day + ' 每日汇总');
     p.append(
-        el('p', `本期邮件 ${items.length} 封；其中未即时提醒 ${(data.review || []).length} 封；操作 ${data.operations.length} 条。`),
+        el('p', `本期邮件 ${items.length} 封；待复核 ${(data.review || []).length} 封；已复核 ${items.filter(item => item.category==='digest' && item.reviewed).length} 封；操作 ${data.operations.length} 条。`),
         el('p', '供人工查阅，不需要确认或标记完成。', 'muted')
     );
     target.append(p);

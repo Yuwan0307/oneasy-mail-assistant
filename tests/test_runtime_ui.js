@@ -117,6 +117,7 @@ async function dashboard(overrides = {}) {
             return element;
         },
         async reload() { await vm.runInContext('load()', context); },
+        renderMail(item) { context.testMail=item; return vm.runInContext('card(testMail)', context); },
         setLeave(fn) { context.testLeave = fn; vm.runInContext('leaveSettings = testLeave', context); },
         cancelConfirm() { confirmResult = false; },
         failPost(message) { postError = message; },
@@ -271,4 +272,15 @@ test('a rejected control request displays the server error and re-enables contro
     assert.equal(page.button('hide-window').disabled, false);
     assert.equal(page.button('exit-app').disabled, false);
     assert.equal(page.model.paused, false);
+});
+
+test('pending review count and historical reviewed badge reflect different states', async () => {
+    const page = await dashboard({ pending_review: 1, counts: [{ category: 'digest', n: 3 }] });
+    const cards = page.elements.get('#content').children[0];
+    assert.equal(cards.children[2].children[0].textContent, '待人工复核');
+    assert.equal(cards.children[2].children[1].textContent, '1');
+    const mail = page.renderMail({ id: 'checked', version: 1, account: 'support@oneasy.cc',
+        category: 'digest', reviewed: 1, subject: '已复核的通知', summary: '日常通知',
+        sender: 'vendor@example.com', received: '2026-10-28T13:00:00+08:00', reason: '已人工核对' });
+    assert.equal(mail.children[0].children[1].textContent, '已复核');
 });

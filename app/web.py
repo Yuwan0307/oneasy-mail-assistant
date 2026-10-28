@@ -70,6 +70,7 @@ def create_app(db,config,run_worker=False,desktop_control=False,desktop_port=876
             'paused':worker.is_paused(),'desktop_available':desktop_control and not config.get('demo',False),
             'mailboxes':db.mailboxes(),
             'counts':db.rows('SELECT category,status,count(*) n FROM items GROUP BY category,status'),
+            'pending_review':db.rows("SELECT count(*) n FROM items WHERE category='digest' AND reviewed=0")[0]['n'],
             'configured':{'mail':bool(worker.mail_api),'ai':bool(worker.ai),'smtp':bool(worker.sender),'wecom':bool(worker.wecom_sender)},
             'wecom':{'enabled':bool(config.get('wecom',{}).get('enabled')),'webhook_saved':bool(config.get('wecom',{}).get('webhook'))},
             'smtp':{key:config.get('smtp',{}).get(key,default) for key,default in [('address',''),('host',''),('port',465),('security','ssl')]},
@@ -126,7 +127,7 @@ def create_app(db,config,run_worker=False,desktop_control=False,desktop_port=876
     @app.get('/api/items')
     def items(request:Request,view:str='all',offset:int=0,account:str=''):
         auth(request)
-        where={'business':"category!='digest'",'review':"category='digest'",'all':'1'}.get(view,'1')
+        where={'business':"category!='digest'",'review':"category='digest' AND reviewed=0",'all':'1'}.get(view,'1')
         args=[]
         if account: where+=' AND account=?'; args.append(account)
         return {'total':db.rows('SELECT count(*) n FROM items WHERE '+where,args)[0]['n'],

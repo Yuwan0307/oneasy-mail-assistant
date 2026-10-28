@@ -250,6 +250,18 @@ class GroupReportsTest(unittest.TestCase):
         self.finish(4)
         self.assertEqual([part['content'] for part in self.group],old_parts[1:])
 
+    def test_inflight_mail_only_report_keeps_reviewed_record_boundaries(self):
+        item=self.add(long=True)
+        with self.db.tx() as db: db.execute('UPDATE items SET reviewed=1 WHERE id=?',(item,))
+        self.schedule(); self.deliver(0)
+        report=self.db.report('lihan','2026-10-09')
+        old_parts=group_report_parts(report,'李涵',review_status=False)
+        with self.db.tx() as db:
+            db.execute("UPDATE notices SET part=1,payload=? WHERE kind='report_group'",
+                       (json.dumps({'report_id':'lihan:2026-10-09','format':'mail-only'}),))
+        self.finish(4)
+        self.assertEqual([part['content'] for part in self.group],old_parts[1:])
+
     def test_disabled_group_or_removed_member_cancels_group_and_preserves_original_email(self):
         for case in ('disabled','missing_member'):
             with self.subTest(case=case):
