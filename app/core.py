@@ -9,10 +9,12 @@ from html import unescape
 from io import BytesIO
 from pathlib import PurePath
 from zipfile import ZipFile
+from urllib.parse import parse_qsl,unquote,urlsplit
 import xml.etree.ElementTree as ET
 
 TZ = timezone(timedelta(hours=8), 'Asia/Shanghai')
-RULE_VERSION = 'oneasy-notify-1'
+RULE_VERSION = 'oneasy-notify-2'
+RISK_NOTICE = re.compile(r'欠费|即将到期|服务中断|安全告警|异常登录|投递失败|退信|delivery failed|undeliverable',re.I)
 MAILBOXES = dict(zip(
     [f'{name}@oneasy.cc' for name in ['service','partner','support','noreply','operation','legal']],
     ['客户服务','合作伙伴','技术售后','自动邮件来信与退信','运营业务','法律咨询']))
@@ -89,6 +91,45 @@ def sensitive(text):
     return found
 
 
+def analysis_text(text):
+    # Mailing-list tokens are private too: remove the entire footer URL before AI.
+    text=unicodedata.normalize('NFKC',unescape(text))
+    text=''.join(char for char in text if unicodedata.category(char)!='Cf')
+    def clean(match):
+        original=match[0]
+        try:
+            decoded=unquote(original); url=urlsplit(decoded)
+            if not re.search(r'/(?:unsubscribe|unsubscribe\.php|optout|opt-out|email-preferences)/?$',url.path,re.I):
+                return original
+            keys=[key.lower().replace('-','_') for key,_ in parse_qsl(url.query)]
+            if url.username is not None or url.password is not None:
+                return decoded
+            if any(flag in sensitive(decoded) for flag in ('IP 地址','网络配置')):
+                return decoded
+            if any(key!='token' and sensitive(key) for key in keys):
+                return decoded
+            return '[退订链接已隐藏]'
+        except (ValueError,UnicodeError):
+            return original
+    return re.sub(r'https?://[^\s<>"\x27]+',clean,text,flags=re.I)
+
+
+def periodic_password_notice(mail,text):
+    # Match only the complete known reminder, never all mail from a no-reply sender.
+    if mail.attachments or RISK_NOTICE.search(text) or mail.sender.strip().lower()!='no-reply@mailsupport.aliyun.com': return False
+    compact=lambda value: re.sub(r'[\s"\x27“”‘’]+','',unicodedata.normalize('NFKC',unescape(value)))
+    if compact(mail.subject)!='【系统通知】定期修改密码提醒': return False
+    body=re.sub(r'<(style|script)\b[^>]*>.*?</\1\s*>','',mail.body,flags=re.I|re.S)
+    visible=compact(plain(body))
+    expected=('尊敬的用户:管理员已启用"定期修改密码提醒"功能。请及时登录网页版邮箱,'
+              '进入设置-查看更多设置-账户与安全-账户安全修改账号'+mail.account+'的密码。阿里邮箱团队')
+    expected=compact(expected)
+    if expected not in visible: return False
+    remainder=visible.replace(expected,'').replace('定期修改密码提醒','').replace('【系统通知】','').replace('阿里邮箱系统信模板','')
+    if any(char.isalnum() for char in remainder): return False
+    return not sensitive(text.replace('定期修改密码提醒','').replace('的密码',''))
+
+
 def attachment_text(name, data):
     if len(data) > 5 * 1024 * 1024:
         raise ValueError('附件过大')
@@ -128,7 +169,11 @@ def attachment_text(name, data):
 def classify(mail, ai):
     try:
         # Complete local inspection must finish before calling any remote model.
-        text = '\n'.join([mail.subject, mail.sender, mail.body] + [name + '\n' + attachment_text(name, data) for name, data in mail.attachments])
+        text = '\n'.join([mail.subject, mail.sender, analysis_text(mail.body)] +
+                         [name + '\n' + analysis_text(attachment_text(name, data)) for name, data in mail.attachments])
+        if periodic_password_notice(mail,text):
+            return Decision('digest','阿里邮箱定期修改密码提醒：管理员已启用该功能，请按公司安排在网页版邮箱更新密码。',
+                            '匹配常规定期提醒模板，无账号异常或具体凭证值',evidence='定期修改密码提醒',confidence=1)
         flags = sensitive(text)
         if flags:
             return Decision('human', '涉及公司信息，请人工查看原邮件', '、'.join(flags), sensitive=True)
@@ -137,7 +182,7 @@ def classify(mail, ai):
     except Exception:
         return Decision('human','附件需人工查看','附件无法完整检查', sensitive=True)
     # Billing/security notices have priority even if their sender is a vendor.
-    if re.search(r'欠费|即将到期|服务中断|安全告警|异常登录|投递失败|退信|delivery failed|undeliverable', text, re.I):
+    if RISK_NOTICE.search(text):
         return Decision('action', '服务或投递异常，请查看原邮件', '命中业务风险通知规则')
     if ai is None:
         return Decision('human','请人工确认邮件事项','AI 尚未配置')
@@ -148,6 +193,10 @@ def classify(mail, ai):
             raise ValueError('分类无效')
         if sensitive('\n'.join([result.summary,result.reason,result.hints,result.evidence])):
             return Decision('human','分析结果需要人工查看','结果包含敏感信息', sensitive=True)
+        if result.category=='digest' and result.evidence and result.evidence not in text:
+            # Models sometimes join several quotes; retain one verifiable original span.
+            quotes=[line.strip() for line in result.evidence.splitlines() if len(line.strip())>=20 and line.strip() in text]
+            if quotes: result.evidence=max(quotes,key=len)
         if result.category == 'digest' and (result.confidence < .95 or not result.evidence or result.evidence not in text):
             result.category = 'human'
             result.reason = '无法可靠确认与业务无关，请人工复核'
