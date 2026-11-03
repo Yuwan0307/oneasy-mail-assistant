@@ -13,7 +13,7 @@ from urllib.parse import parse_qsl,unquote,urlsplit
 import xml.etree.ElementTree as ET
 
 TZ = timezone(timedelta(hours=8), 'Asia/Shanghai')
-RULE_VERSION = 'oneasy-notify-3'
+RULE_VERSION = 'oneasy-notify-4'
 RISK_NOTICE = re.compile(r'欠费|即将到期|服务中断|安全告警|异常登录|投递失败|退信|delivery failed|undeliverable',re.I)
 MAILBOXES = dict(zip(
     [f'{name}@oneasy.cc' for name in ['service','partner','support','noreply','operation','legal']],
@@ -166,8 +166,34 @@ def attachment_text(name, data):
     raise ValueError('附件类型需人工检查')
 
 
+def website_promotion(mail):
+    # Explicit user-approved ad exclusion; promotional images never go to AI.
+    envelope='\n'.join([mail.subject,mail.sender,analysis_text(mail.body),*[name for name,_ in mail.attachments]])
+    if len(envelope)>60000 or sensitive(envelope) or RISK_NOTICE.search(envelope): return None
+    body=plain(re.sub(r'<(style|script)\b[^>]*>.*?</\1\s*>','',analysis_text(mail.body),flags=re.I|re.S))
+    topic=re.search(r'(?:官网|网站|搜索).{0,12}(?:推广|广告)|(?:推广|广告).{0,12}(?:官网|网站)|(?:AI|人工智能|大模型).{0,12}(?:收录|推荐|曝光|可见度)|\bGEO(?:优化|推广|服务)',body,re.I)
+    sales=re.search(r'(?:我们|我司|本公司)(?:现在)?(?:也)?(?:提供|做|主营|专注|推出|开展)|(?:我是|来自).{0,15}(?:百度|广告|推广)|(?:专业提供|主营).{0,16}(?:推广|广告|收录)',body)
+    invitation=re.search(r'(?:欢迎|感兴趣|有意向|有需求).{0,12}(?:联系|咨询|扫码|沟通)|(?:您|贵司|贵公司|你们).{0,8}(?:有.{0,4}(?:需求|计划)|需要|考虑).{0,20}(?:吗|[?？])',body)
+    if not topic or not sales or not invitation: return None
+    # An advertising company can also be a customer asking about our products.
+    if re.search(r'(?:贵司|贵公司|你们|Oneasy).{0,40}(?:怎么|如何|多少|价格|收费|套餐|能否|是否提供)',body,re.I): return None
+    if re.search(r'合同|订单|发票|退款|售后|报错|故障|工单|法律|律师|侵权|投诉|已购买|已签|采购|询价|索取|希望了解|想了解|能否.{0,6}(?:提供|介绍)|请(?:贵司|贵公司|你们)?.{0,5}(?:提供|协助|开通|处理|帮)|忽略.{0,12}(?:指令|规则)|system prompt|ignore.{0,30}instructions',envelope,re.I): return None
+    if len(mail.attachments)>20 or sum(len(data) for _,data in mail.attachments)>10*1024*1024: return None
+    for name,data in mail.attachments:
+        suffix=PurePath(name).suffix.lower()
+        image=(suffix=='.png' and data.startswith(b'\x89PNG\r\n\x1a\n') or
+               suffix in {'.jpg','.jpeg'} and data.startswith(b'\xff\xd8\xff') or
+               suffix=='.gif' and data.startswith((b'GIF87a',b'GIF89a')) or
+               suffix=='.webp' and data.startswith(b'RIFF') and data[8:12]==b'WEBP')
+        if not image or len(data)>5*1024*1024: return None
+    return Decision('marketing','该邮件推销官网推广或AI收录相关服务，已过滤，无需处理。',
+                    '用户指定的无效广告：官网广告或AI收录服务推销',evidence=topic[0],confidence=1)
+
+
 def classify(mail, ai):
     try:
+        promotion=website_promotion(mail)
+        if promotion: return promotion
         # Complete local inspection must finish before calling any remote model.
         text = '\n'.join([mail.subject, mail.sender, analysis_text(mail.body)] +
                          [name + '\n' + analysis_text(attachment_text(name, data)) for name, data in mail.attachments])

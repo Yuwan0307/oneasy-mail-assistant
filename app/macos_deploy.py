@@ -17,7 +17,7 @@ from datetime import datetime
 from pathlib import Path
 from urllib.request import ProxyHandler, Request, build_opener
 
-VERSION = '1.6.8'
+VERSION = '1.6.9'
 LABEL = 'com.oneasy.mailassistant'
 PORT = 8765
 ROOT = Path('/Library/Application Support/Oneasy/MailAssistant')

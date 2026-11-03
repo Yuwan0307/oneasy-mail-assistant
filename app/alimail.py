@@ -89,6 +89,7 @@ class AliMail:
                 if not location and 'application/json' in response.headers.get('content-type',''):
                     location=response.json().get('location')
                 if location:
+                    location=str(response.url.join(location))
                     host=urlsplit(location)
                     if host.scheme!='https' or not host.hostname or not any(host.hostname.endswith('.'+domain) or host.hostname==domain for domain in ['aliyuncs.com','aliyun.com','mxhichina.com']):
                         raise ValueError('附件下载地址未被许可')

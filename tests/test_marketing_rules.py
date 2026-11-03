@@ -1,6 +1,7 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from app.core import Mail,Decision,classify
 from app.store import Store
@@ -128,7 +129,7 @@ class MarketingRulesTest(unittest.TestCase):
 
     def test_confirmed_marketing_is_archived_without_review_or_instant_notices(self):
         scratch=Path.cwd()/'.test-temp'; scratch.mkdir(exist_ok=True)
-        with tempfile.TemporaryDirectory(dir=scratch) as directory:
+        with tempfile.TemporaryDirectory(dir=scratch) as directory, patch('app.store.now',return_value=at('2026-10-28T12:00')):
             db=Store(Path(directory)/'test.db'); db.activate(at('2026-10-28T10:00'))
             mail=self.mail('Paid diagnosis offer.\nhttps://vendor.example/unsubscribe?token=opaque-value')
             decision=classify(mail,lambda safe:Decision('marketing','付费诊断推广','产品营销',evidence='Paid diagnosis offer.',confidence=.99))
