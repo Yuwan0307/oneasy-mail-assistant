@@ -131,6 +131,8 @@ class Store:
         if not old: self.notice(db,f'{kind}:{item_id}:{version}:{owner}',owner,kind,item_id,version,payload,due)
 
     def notify_item(self, db, kind, item_id, version, payload=None, due=None):
+        item=db.execute('SELECT is_test FROM items WHERE id=?',(item_id,)).fetchone()
+        if item and item['is_test']: return
         for row in db.execute('SELECT person_id FROM item_owners WHERE item_id=?',(item_id,)).fetchall():
             self.item_notice(db,row[0],kind,item_id,version,payload,due)
 
@@ -160,10 +162,10 @@ class Store:
             db.executemany('INSERT INTO item_owners(item_id,person_id,report_at) VALUES(?,?,?)',
                            [(item_id,p,values['report_at']) for p in self.owners(mail.account,db)])
             self.log('classified',item_id,{'category':decision.category,'reason':values['reason'],'model':decision.model,'rule':RULE_VERSION},db=db)
-            if decision.category in {'action','info','human'}:
+            if decision.category in {'action','info','human'} and not decision.is_test:
                 self.notify_item(db,'initial',item_id,1)
             else:
-                self.log('instant_skipped',item_id,{'reason':'marketing_ignored' if decision.category=='marketing' else 'daily_review'},db=db)
+                self.log('instant_skipped',item_id,{'reason':'test_silent' if decision.is_test else 'marketing_ignored' if decision.category=='marketing' else 'daily_review'},db=db)
         return item_id
 
     def review(self, item_id, version, actor, action, connection=None):
@@ -179,7 +181,7 @@ class Store:
                 return False
             db.execute('UPDATE items SET reviewed=1 WHERE id=?',(item_id,))
             if action == 'needs_action':
-                db.execute("UPDATE items SET category='action',status='recorded',version=version+1 WHERE id=?",(item_id,))
+                db.execute("UPDATE items SET category='action',is_test=0,status='recorded',version=version+1 WHERE id=?",(item_id,))
                 db.execute("UPDATE notices SET state='cancelled' WHERE item_id=? AND state='pending'",(item_id,))
                 self.notify_item(db,'initial',item_id,version+1)
             if action in {'needs_action','restore'} and item['folder'] != item['original_folder']:
@@ -315,7 +317,7 @@ class Store:
                     and (not a['item_id'] or db.execute('SELECT 1 FROM item_owners WHERE item_id=? AND person_id=?',(a['item_id'],owner)).fetchone())]
         person=db.execute('SELECT name FROM people WHERE id=?',(owner,)).fetchone()
         return dict(mode='notification',owner=owner,owner_name=person[0] if person else owner,day=cutoff.date().isoformat(),since=since.isoformat(),cutoff=cutoff.isoformat(),
-                    items=items,review=[i for i in items if i['category']=='digest' and not i['reviewed']],operations=operations)
+                    items=items,notification_items=[i for i in items if not i['is_test']],review=[i for i in items if i['category']=='digest' and not i['reviewed'] and not i['is_test']],operations=operations)
 
     def schedule(self, current, group_reports=False):
         current = stamp(current)

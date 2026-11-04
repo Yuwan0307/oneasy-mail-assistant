@@ -33,7 +33,46 @@ class NoticeContextTest(unittest.TestCase):
             self.assertIn('测试邮件',text); self.assertIn('无需实际开通或回复',text)
             self.assertNotIn('按需处理',text); self.assertNotIn('按真实需求',text)
             self.assertIn('测试邮件',item_text(item))
-            self.assertEqual([r['kind'] for r in db.rows('SELECT kind FROM notices WHERE item_id=?',(key,))],['initial'])
+            self.assertEqual(db.rows('SELECT kind FROM notices WHERE item_id=?',(key,)),[])
+
+    def smoke(self):
+        mail=self.mail('客户姓名\nOneasy SMOKE\n所属公司\nSMOKE-20261105\n联系邮箱\ncontact@example.com\n后续行动建议：请于24小时内完成审核。')
+        mail.subject='新试用申请提交'; mail.sender='operation@account.mail.oneasy.cc'
+        return mail
+
+    def test_confirmed_smoke_form_pattern_is_remembered(self):
+        result=classify(self.smoke(),None)
+        self.assertTrue(result.is_test); self.assertEqual(result.category,'info')
+
+    def test_smoke_name_alone_or_unrelated_sender_is_not_silenced(self):
+        for change in ('sender','account','company'):
+            mail=self.smoke()
+            if change=='sender': mail.sender='customer@example.com'
+            elif change=='account': mail.account='support@oneasy.cc'
+            else: mail.body=mail.body.replace('SMOKE-20261105','SMOKE Electronics')
+            self.assertFalse(self.model(mail,'none','').is_test)
+
+    def test_silent_test_retains_ledger_but_is_absent_from_new_outbound_reports(self):
+        from app.notifications import report_text,group_report_text
+        scratch=Path.cwd()/'.test-temp'; scratch.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=scratch) as directory,patch('app.store.now',return_value=at('2026-11-04T14:00')):
+            db=Store(Path(directory)/'test.db'); db.activate(at('2026-11-04T10:00'))
+            key=db.ingest(self.smoke(),classify(self.smoke(),None)); db.schedule(at('2026-11-04T18:00'))
+            report=db.report('lihan','2026-11-04')
+            self.assertIn(key,[item['id'] for item in report['items']])
+            self.assertEqual(report['notification_items'],[])
+            self.assertNotIn('新试用申请提交',report_text(report))
+            self.assertNotIn('新试用申请提交',group_report_text(report,'负责人'))
+            self.assertEqual(db.rows('SELECT kind FROM notices WHERE item_id=?',(key,)),[])
+
+    def test_manual_business_correction_can_override_silent_test(self):
+        scratch=Path.cwd()/'.test-temp'; scratch.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=scratch) as directory,patch('app.store.now',return_value=at('2026-11-04T14:00')):
+            db=Store(Path(directory)/'test.db'); db.activate(at('2026-11-04T10:00'))
+            key=db.ingest(self.smoke(),classify(self.smoke(),None))
+            self.assertTrue(db.review(key,1,'lihan','needs_action'))
+            self.assertFalse(db.item(key)['is_test'])
+            self.assertEqual(len(db.rows('SELECT kind FROM notices WHERE item_id=?',(key,))),1)
 
     def test_test_company_name_does_not_suppress_real_customer(self):
         result=self.model(self.mail('test公司申请试用，请于今天17:00回复。'),'customer','请于今天17:00回复')

@@ -38,6 +38,7 @@ def item_text(item,review_status=False):
 
 
 def report_text(report, legacy=False,review_status=True):
+    report={**report,'items':report.get('notification_items',report['items'])}
     status=review_status and not legacy
     review=[i for i in report['items'] if i['category']=='digest' and (not status or not i.get('reviewed'))]
     checked=[i for i in report['items'] if i['category']=='digest' and i.get('reviewed')] if status else []
@@ -145,6 +146,7 @@ def system_notice_text(code,accounts,detected):
 
 
 def group_report_text(report,owner_name,legacy=False,review_status=True):
+    report={**report,'items':report.get('notification_items',report['items'])}
     status=review_status and not legacy
     items=report['items']; review=[i for i in items if i['category']=='digest' and (not status or not i.get('reviewed'))]
     checked=[i for i in items if i['category']=='digest' and i.get('reviewed')] if status else []

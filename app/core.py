@@ -13,7 +13,7 @@ from urllib.parse import parse_qsl,unquote,urlsplit
 import xml.etree.ElementTree as ET
 
 TZ = timezone(timedelta(hours=8), 'Asia/Shanghai')
-RULE_VERSION = 'oneasy-notify-5'
+RULE_VERSION = 'oneasy-notify-6'
 RISK_NOTICE = re.compile(r'欠费|即将到期|服务中断|安全告警|异常登录|投递失败|退信|delivery failed|undeliverable',re.I)
 MAILBOXES = dict(zip(
     [f'{name}@oneasy.cc' for name in ['service','partner','support','noreply','operation','legal']],
@@ -217,13 +217,18 @@ def classify(mail, ai):
     # Billing/security notices have priority even if their sender is a vendor.
     if RISK_NOTICE.search(text):
         return Decision('action', '服务或投递异常，请查看原邮件', '命中业务风险通知规则')
-    if any(re.match(r'^(?:本邮件(?:为|是)(?:一封)?(?:测试模拟|模拟测试|测试邮件)|仅用于验证邮件助手)',line.strip(' —–-\t\r'))
+    visible=plain(mail.body)
+    confirmed_smoke=(mail.account=='operation@oneasy.cc' and mail.sender.strip().lower()=='operation@account.mail.oneasy.cc'
+                     and mail.subject.strip()=='新试用申请提交'
+                     and re.search(r'(?m)^\s*客户姓名\s*\n\s*Oneasy SMOKE\s*\n',visible,re.I)
+                     and re.search(r'(?m)^\s*所属公司\s*\n\s*SMOKE-\d{8}\s*(?:\n|$)',visible,re.I))
+    if confirmed_smoke or any(re.match(r'^(?:本邮件(?:为|是)(?:一封)?(?:测试模拟|模拟测试|测试邮件)|仅用于验证邮件助手)',line.strip(' —–-\t\r'))
            for line in plain(mail.body).splitlines()):
         visible=plain(text)
         section=internal_section(visible)
         followup=re.search(r'请于[^\n。；]{1,100}',visible[section.end():]) if section else None
         return Decision('info','【测试邮件】模拟客户咨询，仅用于验证检测与提醒，无需实际开通或回复。',
-                        '原文明确标注测试模拟；内部模板建议不作为客户截止时间或实际办理要求',
+                        '已确认SMOKE测试表单，静默留档' if confirmed_smoke else '原文明确标注测试模拟，静默留档',
                         is_test=True,deadline_source='none',internal_followup=followup[0] if followup else '')
     if ai is None:
         return Decision('human','请人工确认邮件事项','AI 尚未配置')

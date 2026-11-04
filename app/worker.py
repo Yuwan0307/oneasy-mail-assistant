@@ -153,6 +153,7 @@ class Worker:
             item=self.db.item(notice['item_id']) if notice['item_id'] else None
             state='pending'; error=''; part=notice['part']; attempts=notice['attempts']
             invalid=notice['item_id'] and (not item or notice['owner'] not in self.db.owners(item['account']) or item['version']!=notice['version'])
+            if item and item.get('is_test'): invalid=True
             if not people: invalid=True
             if notice['kind']=='system' and payload.get('account'):
                 invalid=invalid or notice['owner'] not in self.db.owners(payload['account'])
@@ -232,7 +233,7 @@ class Worker:
                     parts=message_parts('负责人：'+owner_name+'\n'+report_text(report,legacy=True),identity,limit=2048)
                 self.db.set('last_send',current.timestamp())
                 attempts+=1
-                userids=[people[0]['userid']] if any(i['category'] in {'action','info','human'} for i in report['items']) else []
+                userids=[people[0]['userid']] if any(i['category'] in {'action','info','human'} for i in report.get('notification_items',report['items'])) else []
                 self.db.log('notification_attempt',detail={'notice':notice['id'],'channel':'wecom','part':part+1,'total':len(parts),'revision':revision,'userid':people[0]['userid'] if userids else ''})
                 self.wecom_sender.send_text(parts[part],userids,identity+':'+str(part))
                 part+=1
