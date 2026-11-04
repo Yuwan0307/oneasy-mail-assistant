@@ -47,6 +47,9 @@ class Store:
                 if name not in columns: db.execute(f'ALTER TABLE notices ADD COLUMN {name} {definition}')
             if 'report_at' not in {r['name'] for r in db.execute('PRAGMA table_info(items)')}:
                 db.execute("ALTER TABLE items ADD COLUMN report_at TEXT NOT NULL DEFAULT ''")
+            columns={r['name'] for r in db.execute('PRAGMA table_info(items)')}
+            for name,definition in [('is_test','INTEGER NOT NULL DEFAULT 0'),('deadline_source',"TEXT NOT NULL DEFAULT ''"),('internal_followup',"TEXT NOT NULL DEFAULT ''")]:
+                if name not in columns: db.execute(f'ALTER TABLE items ADD COLUMN {name} {definition}')
             if 'report_from' not in {r['name'] for r in db.execute('PRAGMA table_info(items)')}:
                 db.execute("ALTER TABLE items ADD COLUMN report_from TEXT NOT NULL DEFAULT ''")
                 db.execute("UPDATE items SET report_at=created WHERE report_at=''")
@@ -151,7 +154,8 @@ class Store:
                 category=decision.category,owner=owner[0],status='recorded',
                 deadline=stamp(decision.deadline).isoformat() if decision.deadline else None,evidence='' if masked else decision.evidence[:300],
                 hints='' if masked else decision.hints[:500],sensitive=int(masked),folder=mail.folder,original_folder=mail.folder,
-                model=decision.model,rule_version=RULE_VERSION)
+                model=decision.model,rule_version=RULE_VERSION,is_test=int(decision.is_test),deadline_source=decision.deadline_source,
+                internal_followup='' if masked else decision.internal_followup[:500])
             db.execute(f"INSERT INTO items({','.join(values)}) VALUES({','.join('?' for _ in values)})", tuple(values.values()))
             db.executemany('INSERT INTO item_owners(item_id,person_id,report_at) VALUES(?,?,?)',
                            [(item_id,p,values['report_at']) for p in self.owners(mail.account,db)])

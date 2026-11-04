@@ -37,7 +37,7 @@ function Wait-Ready {
     for ($attempt = 0; $attempt -lt 45; $attempt++) {
         try {
             $health = Invoke-RestMethod "http://127.0.0.1:$Port/api/health" -TimeoutSec 2
-            if ($health.app -eq 'oneasy-mail-assistant' -and $health.version -eq '1.6.9') { return }
+            if ($health.app -eq 'oneasy-mail-assistant' -and $health.version -eq '1.6.10') { return }
         } catch { }
         if ((Get-Service $ServiceName).Status -eq 'Stopped') { throw '后台服务启动失败，请查看 logs\service.log 和 Windows 应用程序事件日志。' }
         Start-Sleep -Seconds 1
@@ -103,7 +103,7 @@ try {
     $changed = $true
     Write-Host '正在安装运行环境和后台服务……'
     foreach ($name in @('app','runtime','scripts')) { Copy-Item -LiteralPath "$SourceRoot\$name" -Destination $InstallRoot -Recurse -Force }
-    @{service_name=$ServiceName; port=$Port; version='1.6.9'} | ConvertTo-Json | Set-Content "$InstallRoot\deployment.json" -Encoding UTF8
+    @{service_name=$ServiceName; port=$Port; version='1.6.10'} | ConvertTo-Json | Set-Content "$InstallRoot\deployment.json" -Encoding UTF8
     New-Item -ItemType Directory -Force -Path "$InstallRoot\data" | Out-Null
     Invoke-Checked icacls.exe @("$InstallRoot\data",'/inheritance:r','/grant:r','*S-1-5-18:(OI)(CI)F','*S-1-5-32-544:(OI)(CI)F')
     Invoke-Checked icacls.exe @("$InstallRoot\backups",'/inheritance:r','/grant:r','*S-1-5-18:(OI)(CI)F','*S-1-5-32-544:(OI)(CI)F')

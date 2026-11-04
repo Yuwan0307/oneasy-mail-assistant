@@ -154,7 +154,7 @@ function card(item) {
     const head = el('div', '', 'row between');
     head.append(
         el('span', item.account, 'muted'),
-        el('span', item.category==='digest' && item.reviewed ? '已复核' : labels[item.category], 'badge' + (item.category === 'human' ? ' warn' : ''))
+        el('span', item.is_test ? '测试邮件' : item.category==='digest' && item.reviewed ? '已复核' : labels[item.category], 'badge' + (item.category === 'human' ? ' warn' : ''))
     );
     
     c.append(
@@ -165,8 +165,9 @@ function card(item) {
         el('p', `判断依据：${item.reason}`, 'detail')
     );
 
-    if (item.deadline) c.append(el('p', `客户截止时间：${time(item.deadline)}（证据：${item.evidence}）`));
-    if (item.hints) c.append(el('p', '回复参考要点：' + item.hints, 'detail'));
+    if (item.deadline && !item.is_test) c.append(el('p', `客户截止时间：${time(item.deadline)}（证据：${item.evidence}）`));
+    if (item.internal_followup) c.append(el('p', `内部跟进建议（${item.is_test ? '测试模板，无需执行' : '非客户截止时间'}）：${item.internal_followup}`, 'detail'));
+    if (item.hints && !item.is_test) c.append(el('p', '回复参考要点：' + item.hints, 'detail'));
 
     const actions = el('div', '', 'row');
     const act = action => async () => {

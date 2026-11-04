@@ -167,6 +167,9 @@ class Worker:
                         title='收到业务来信' if notice['kind']=='initial' else '完成情况复核：请自行检查是否已处理，无需反馈。'
                         text=title+'\n'+item_text(item)
                         subject=('【Oneasy·业务来信】' if notice['kind']=='initial' else '【Oneasy·处理复核】')+item['subject']
+                        if item.get('is_test'):
+                            text='【测试邮件】仅供验证，无需实际开通或回复。\n'+item_text(item)
+                            subject='【Oneasy·测试邮件】'+item['subject']
                     elif notice['kind']=='report':
                         report=json.loads(self.db.rows('SELECT payload FROM reports WHERE id=?',(payload['report_id'],))[0]['payload'])
                         if part==0 and payload.get('format')!='review-status':

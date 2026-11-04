@@ -294,3 +294,13 @@ test('ignored marketing is not counted as business and remains correctable in re
     assert.equal(mail.children[0].children[1].textContent, '营销推广·已忽略');
     assert.ok(mail.children.flatMap(child => child.children).some(child => child.textContent === '更正为业务邮件'));
 });
+
+test('simulation cards label tests and hide real work suggestions', async () => {
+    const page = await dashboard();
+    const mail = page.renderMail({ id: 'simulation', version: 1, account: 'operation@oneasy.cc', category: 'info', is_test: 1,
+        subject: '测试表单', summary: '无需实际开通或回复', sender: 'form@example.com', received: '2026-11-04T13:48:35+08:00', reason: '测试模拟',
+        hints: '按真实需求开通账号', internal_followup: '1个工作日内联系客户' });
+    assert.equal(mail.children[0].children[1].textContent, '测试邮件');
+    assert.ok(mail.children.some(child => child.textContent.includes('内部跟进建议（测试模板，无需执行）')));
+    assert.ok(mail.children.every(child => !child.textContent.includes('按真实需求开通账号')));
+});

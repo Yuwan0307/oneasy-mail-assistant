@@ -28,10 +28,12 @@ def message_parts(text, notice_id, limit=None):
 def item_text(item,review_status=False):
     labels={'action':'需要处理','human':'请人工查看','info':'业务信息','digest':'未即时提醒，供人工复核','marketing':'已忽略推广，无需复核'}
     if review_status and item['category']=='digest' and item.get('reviewed'): labels['digest']='已复核'
+    if item.get('is_test'): labels[item['category']]='测试邮件，无需实际开通或回复'
     lines=[f"邮箱：{item['account']}",f"分类：{labels[item['category']]}",f"主题：{item['subject']}",
            f"发件人：{item['sender']}",f"收到：{item['received']}",f"摘要：{item['summary']}",f"依据：{item['reason']}"]
-    if item.get('deadline'): lines.append('客户截止：'+item['deadline'])
-    if item.get('hints'): lines.append('回复参考要点：'+item['hints'])
+    if item.get('deadline') and not item.get('is_test'): lines.append('客户截止：'+item['deadline'])
+    if item.get('internal_followup'): lines.append('内部跟进建议'+('（测试模板，无需执行）' if item.get('is_test') else '（非客户截止时间）')+'：'+item['internal_followup'])
+    if item.get('hints') and not item.get('is_test'): lines.append('回复参考要点：'+item['hints'])
     return '\n'.join(lines)
 
 
@@ -86,10 +88,14 @@ def group_item_text(item, compact=False):
     lines=[f"主题：{value('subject',120)}",f"邮箱：{item['account']}",
            f"发件人：{value('sender',100)}",f"收信时间：{display_time(item['received'])}（北京时间）",
            f"事项：{value('summary',240)}"]
-    if item.get('deadline'): lines.append('客户要求的截止时间：'+display_time(item['deadline']))
+    if item.get('is_test'): lines.append('邮件性质：测试模拟，无需实际开通或回复。')
+    if item.get('deadline') and not item.get('is_test'): lines.append('客户要求的截止时间：'+display_time(item['deadline']))
     elif '截止要求需人工确认' in str(item.get('reason') or ''):
         lines.append('时间要求：客户提出了时间要求，具体截止时间请查看原邮件并人工确认。')
-    hints=hint_lines(item.get('hints'))
+    elif '时间来源需人工确认' in str(item.get('reason') or ''):
+        lines.append('时间来源待确认：请核对是客户要求还是内部建议，暂不安排截止提醒。')
+    if item.get('internal_followup'): lines.append('内部跟进建议'+('（测试模板，无需执行）' if item.get('is_test') else '（非客户截止时间）')+'：'+value('internal_followup',250))
+    hints=[] if item.get('is_test') else hint_lines(item.get('hints'))
     if hints:
         if compact:
             incomplete=hints[-1]=='部分建议内容不完整，请结合原邮件核对。'
@@ -100,6 +106,8 @@ def group_item_text(item, compact=False):
 
 
 def group_notice_text(item,kind):
+    if item.get('is_test'):
+        return '【测试邮件 · 验证提醒】\n仅用于验证检测与提醒，无需实际开通或回复。\n\n'+group_item_text(item,compact=True)+'\n\n请核验测试结果，无需按真实客户事项办理。'
     if kind=='deadline':
         title='【截止前复核】'
         prompt='客户要求的回复时间即将到来，请核对是否已处理；已处理可忽略。'

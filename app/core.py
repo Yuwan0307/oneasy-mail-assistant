@@ -13,7 +13,7 @@ from urllib.parse import parse_qsl,unquote,urlsplit
 import xml.etree.ElementTree as ET
 
 TZ = timezone(timedelta(hours=8), 'Asia/Shanghai')
-RULE_VERSION = 'oneasy-notify-4'
+RULE_VERSION = 'oneasy-notify-5'
 RISK_NOTICE = re.compile(r'欠费|即将到期|服务中断|安全告警|异常登录|投递失败|退信|delivery failed|undeliverable',re.I)
 MAILBOXES = dict(zip(
     [f'{name}@oneasy.cc' for name in ['service','partner','support','noreply','operation','legal']],
@@ -56,6 +56,9 @@ class Decision:
     model: str = 'local'
     sensitive: bool = False
     hints: str = ''
+    is_test: bool = False
+    deadline_source: str = ''
+    internal_followup: str = ''
 
 
 class PlainHTML(HTMLParser):
@@ -190,6 +193,10 @@ def website_promotion(mail):
                     '用户指定的无效广告：官网广告或AI收录服务推销',evidence=topic[0],confidence=1)
 
 
+def internal_section(text):
+    return re.search(r'后续行动建议|内部跟进(?:建议|要求)|内部\s*SLA|团队跟进建议',text,re.I)
+
+
 def classify(mail, ai):
     try:
         promotion=website_promotion(mail)
@@ -210,6 +217,13 @@ def classify(mail, ai):
     # Billing/security notices have priority even if their sender is a vendor.
     if RISK_NOTICE.search(text):
         return Decision('action', '服务或投递异常，请查看原邮件', '命中业务风险通知规则')
+    if any(re.match(r'^(?:本邮件(?:为|是)(?:一封)?(?:测试模拟|模拟测试|测试邮件)|仅用于验证邮件助手)',line.strip(' —–-\t\r'))
+           for line in plain(mail.body).splitlines()):
+        section=internal_section(text)
+        followup=re.search(r'请于[^\n。；]{1,100}',text[section.end():]) if section else None
+        return Decision('info','【测试邮件】模拟客户咨询，仅用于验证检测与提醒，无需实际开通或回复。',
+                        '原文明确标注测试模拟；内部模板建议不作为客户截止时间或实际办理要求',
+                        is_test=True,deadline_source='none',internal_followup=followup[0] if followup else '')
     if ai is None:
         return Decision('human','请人工确认邮件事项','AI 尚未配置')
     try:
@@ -217,7 +231,7 @@ def classify(mail, ai):
         result = ai(safe_mail)
         if result.category not in {'action','info','digest','human','marketing'}:
             raise ValueError('分类无效')
-        if sensitive('\n'.join([result.summary,result.reason,result.hints,result.evidence])):
+        if sensitive('\n'.join([result.summary,result.reason,result.hints,result.evidence,result.internal_followup])):
             return Decision('human','分析结果需要人工查看','结果包含敏感信息', sensitive=True)
         if result.category in {'digest','marketing'} and result.evidence and result.evidence not in text:
             # Models sometimes join several quotes; retain one verifiable original span.
