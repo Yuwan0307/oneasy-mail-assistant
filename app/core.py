@@ -219,8 +219,9 @@ def classify(mail, ai):
         return Decision('action', '服务或投递异常，请查看原邮件', '命中业务风险通知规则')
     if any(re.match(r'^(?:本邮件(?:为|是)(?:一封)?(?:测试模拟|模拟测试|测试邮件)|仅用于验证邮件助手)',line.strip(' —–-\t\r'))
            for line in plain(mail.body).splitlines()):
-        section=internal_section(text)
-        followup=re.search(r'请于[^\n。；]{1,100}',text[section.end():]) if section else None
+        visible=plain(text)
+        section=internal_section(visible)
+        followup=re.search(r'请于[^\n。；]{1,100}',visible[section.end():]) if section else None
         return Decision('info','【测试邮件】模拟客户咨询，仅用于验证检测与提醒，无需实际开通或回复。',
                         '原文明确标注测试模拟；内部模板建议不作为客户截止时间或实际办理要求',
                         is_test=True,deadline_source='none',internal_followup=followup[0] if followup else '')

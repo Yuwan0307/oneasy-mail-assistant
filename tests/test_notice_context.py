@@ -77,3 +77,10 @@ class NoticeContextTest(unittest.TestCase):
         result=self.model(self.mail('申请试用。\n内部跟进建议：先登记。\n客户要求：请于今天17:00回复。'),'customer','请于今天17:00回复')
         self.assertEqual(result.deadline.isoformat(),'2026-11-04T17:00:00+08:00')
         self.assertEqual(result.deadline_source,'customer')
+
+    def test_simulated_html_form_followup_contains_no_markup(self):
+        mail=self.mail('<p>本邮件为测试模拟客户来信，仅用于验证邮件助手，无需实际开通或回复。</p><h3>后续行动建议：</h3><li>请于1个工作日内联系客户;</li>')
+        result=classify(mail,None)
+        self.assertTrue(result.is_test)
+        self.assertIn('1个工作日',result.internal_followup)
+        self.assertNotIn('<',result.internal_followup)
