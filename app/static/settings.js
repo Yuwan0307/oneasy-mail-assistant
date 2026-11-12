@@ -188,7 +188,7 @@ function wecomEditor(target) {
     webhook.placeholder = saved.webhook_saved ? '已配置，留空保留' : '填写群机器人 Webhook';
     form.append(
         el('p', '启用后，即时及复核提醒优先发到同一个企业微信群，并 @ 相关负责人；未填写企业微信成员账号或群发送失败时改发邮件。', 'muted'),
-        el('p', '每日完整汇总（北京时间18:00）同步发群和邮件，群内 @ 报告负责人；未填成员账号只发邮件。长内容编号分条，不截断。', 'muted'),
+        el('p', '每天北京时间18:00，群内按负责人发送简短复核清单，每封一行；邮件保留完整汇总。处理复核涉及业务时才 @，纯系统通知不 @。超长清单按最少条数编号发送。', 'muted'),
         el('p', '群内全体成员均可见提醒和汇总内容，敏感信息仍按原规则遮蔽。自动保存不会发送测试提醒。', 'muted')
     );
     autoSave(form, '/api/wecom', () => ({ enabled: enabled.checked, webhook: webhook.value.trim() }), data => {
@@ -234,7 +234,7 @@ function personEditor(target, id) {
     const email = field(form, 'email', '接收提醒的邮箱', person.email || '', 'email');
     const userid = field(form, 'userid', '企业微信成员账号（用于群内@）', person.userid || '');
     userid.required = false;
-    form.append(el('p', '成员账号可留空，留空时只发邮件。启用群提醒后，每日完整汇总同步发群和提醒邮箱，并在群内 @ 报告负责人。', 'muted'));
+    form.append(el('p', '成员账号可留空，留空时只发邮件。启用群提醒后，18:00复核清单合并发群；每日完整汇总仍发提醒邮箱。', 'muted'));
     const read = () => ({id: personId, name: name.value.trim(), email: email.value.trim(), userid: userid.value.trim()});
     const flush = autoSave(form, '/api/people', read, () => {
         if (tab === 'person:new' && currentRoute() === tab) {
@@ -255,7 +255,7 @@ function mailboxEditor(target, account) {
     const box = state.mailboxes.find(b => b.account === account);
     if (!box) { target.append(el('p', '邮箱不存在。', 'panel')); return; }
     const form = editor(target, box.account + ' · ' + box.label, 'settings');
-    form.parentElement.querySelector('p').textContent = '可选择多位负责人；启用群提醒后，即时及复核提醒合并 @ 已配置成员账号的人，每日完整汇总按负责人分别发群和邮件；未填成员账号只发邮件。修改后自动保存。';
+    form.parentElement.querySelector('p').textContent = '可选择多位负责人；即时及截止前提醒优先发群并 @ 已配置成员账号的人；每天18:00按负责人合并简短复核清单，完整汇总发邮件；未填成员账号只发邮件。修改后自动保存。';
     const owners = el('fieldset', '', 'owner-options');
     owners.append(el('legend', '负责人（至少选择一位）'));
     const choices = state.people.map(person => {

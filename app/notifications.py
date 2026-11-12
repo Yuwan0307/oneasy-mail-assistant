@@ -3,7 +3,7 @@ import ast
 import re
 from collections import Counter
 
-from .core import MAILBOXES, stamp
+from .core import MAILBOXES, stamp, plain, first_review
 
 
 def message_parts(text, notice_id, limit=None):
@@ -200,6 +200,45 @@ def group_report_text(report,owner_name,legacy=False,review_status=True):
 def group_report_parts(report,owner_name,legacy=False,review_status=True):
     text=group_report_text(report,owner_name,legacy=legacy,review_status=review_status)
     title='每日邮件汇总 · '+report['day']+(' · 更新版' if report.get('revision') else '')
+    return group_text_parts(text,title)
+
+
+def group_review_items(report):
+    items=[]
+    for item in report.get('notification_items',report['items']):
+        if item.get('is_test'): continue
+        if item['category']=='digest' and not item.get('reviewed'):
+            items.append(item)
+        elif item['category'] in {'action','human'}:
+            if first_review(item['received'])<=stamp(report['cutoff']): items.append(item)
+    return items
+
+
+def group_review_report_parts(report,owner_name):
+    items=group_review_items(report)
+    handling=sum(item['category'] in {'action','human'} for item in items)
+    lines=['负责人：'+owner_name]
+    if not items:
+        lines.append('今日无待复核邮件。')
+    else:
+        lines.append(f'处理复核 {handling} 封，待人工复核 {len(items)-handling} 封。')
+        def short(value,limit):
+            value=re.sub(r'\s+',' ',plain(str(value or ''))).strip()
+            return value if len(value)<=limit else value[:limit]+'…'
+        for index,item in enumerate(items,1):
+            subject=item.get('subject') or '请查看原邮件'
+            if subject.casefold()=='[system notification] reminder to change password regularly': subject='定期修改密码提醒'
+            label='处理复核' if item['category'] in {'action','human'} else '人工复核'
+            lines.append(f"{index}. {item['account']}｜{label}｜{short(subject,32)}：{short(item.get('summary'),42)}")
+        lines.append('请核对是否已处理；普通通知请人工复核。详情见邮件汇总或原邮箱。')
+    if report.get('delayed'): lines.insert(1,'延迟补发，内容对应标题中的日期。')
+    title='18:00邮件复核 · '+report['day']+(' · 更新版' if report.get('revision') else '')
+    parts=group_text_parts('\n'.join(lines),title)
+    if len(parts)==1: parts[0]=parts[0].replace(' · 第1/1条','',1)
+    return parts
+
+
+def group_text_parts(text,title):
     count=1
     while True:
         budget=2048-len(f'【{title} · 第{count}/{count}条】\n'.encode('utf-8'))

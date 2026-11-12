@@ -58,6 +58,9 @@ class GroupReportsTest(unittest.TestCase):
     def schedule(self,when='2026-10-09T18:00'):
         self.db.schedule(at(when),group_reports=True)
 
+    def add_large_checklist(self,count=18,account='service@oneasy.cc'):
+        for index in range(count): self.add(f'分段复核{index:03d}',account,long=True)
+
     def deliver(self,seconds=0):
         with patch('app.worker.now',return_value=at('2026-10-09T18:01')+timedelta(seconds=seconds)):
             self.worker.sync()
@@ -75,7 +78,7 @@ class GroupReportsTest(unittest.TestCase):
     def test_daily_tick_queues_both_channels_and_each_owner_is_mentioned_separately(self):
         self.db.save_person('other','同事','other@example.com',userid='Other')
         self.db.change_owners('service@oneasy.cc',['lihan','other'],'admin')
-        self.add('共有业务',category='info'); self.add('仅李涵业务','partner@oneasy.cc',category='info')
+        self.add('共有业务',category='action'); self.add('仅李涵业务','partner@oneasy.cc',category='action')
         with self.db.tx() as db: db.execute("UPDATE notices SET state='sent' WHERE kind='initial'")
         with patch('app.worker.now',return_value=at('2026-10-09T18:00')):
             self.worker.tick()
@@ -88,7 +91,7 @@ class GroupReportsTest(unittest.TestCase):
         self.assertIn('负责人：同事',by_member['Other'])
         self.assertIn('仅李涵业务',by_member['LiHan'])
         self.assertNotIn('仅李涵业务',by_member['Other'])
-        self.assertTrue(all('请在原邮箱处理业务' in text for text in by_member.values()))
+        self.assertTrue(all('请核对是否已处理' in text for text in by_member.values()))
         self.assertEqual(self.notice()['channel'],'wecom')
         self.assertTrue(self.db.rows("SELECT 1 FROM audit WHERE action='notification_sent' AND detail LIKE '%wecom%'"))
         self.deliver(500)
@@ -98,13 +101,14 @@ class GroupReportsTest(unittest.TestCase):
         self.add('已确认的产品推广',category='marketing'); self.schedule(); self.finish()
         self.assertEqual(len(self.group),1)
         self.assertNotIn('mentioned_list',self.group[0])
-        self.assertIn('已忽略推广',self.group[0]['content'])
+        self.assertIn('今日无待复核邮件',self.group[0]['content'])
+        self.assertNotIn('已确认的产品推广',self.group[0]['content'])
         self.assertNotIn('请在原邮箱处理业务',self.group[0]['content'])
         self.assertEqual(len(self.emails),1)
 
     # A truncating transport call, dropped character, or missing prefix budget must fail.
     def test_complete_group_report_is_numbered_and_limited_including_utf8_prefix(self):
-        self.add(long=True); self.schedule()
+        self.add_large_checklist(); self.schedule()
         self.finish()
         self.assertGreater(len(self.group),1)
         bodies=[]
@@ -118,10 +122,11 @@ class GroupReportsTest(unittest.TestCase):
             self.assertNotIn('内容较长，请登录',content)
             bodies.append(body)
         text=''.join(bodies)
-        self.assertIn('中文🙂说明'*200,text)
-        self.assertIn('待复核广告',text)
+        self.assertNotIn('中文🙂说明'*200,text)
+        for index in range(18): self.assertIn(f'分段复核{index:03d}',text)
         self.assertIn('负责人：李涵',text)
         self.assertEqual(len(self.emails),1)
+        self.assertIn('中文🙂说明'*200,self.emails[0][1])
 
     def test_report_omits_operations_and_keeps_every_email_without_raw_logs(self):
         self.add('业务复核一'); self.add('业务复核二','partner@oneasy.cc')
@@ -130,7 +135,7 @@ class GroupReportsTest(unittest.TestCase):
             self.db.log('wecom_changed',detail={'enabled':True,'webhook_saved':True})
         self.schedule(); self.finish()
         text=''.join(part['content'].split('\n',1)[1] for part in self.group)
-        for expected in ('业务复核一','业务复核二','待人工复核','2026-10-09 18:00','原邮箱'):
+        for expected in ('业务复核一','业务复核二','待人工复核','原邮箱'):
             self.assertIn(expected,text)
         for raw in ('系统操作摘要','完成邮件分类','notification_sent','classified','internal-notice-id','webhook_saved','source_id','T18:00','+08:00'):
             self.assertNotIn(raw,text)
@@ -150,7 +155,7 @@ class GroupReportsTest(unittest.TestCase):
 
     # Losing part/retry_at or resetting them on restart would repeat an accepted fragment.
     def test_failure_retries_current_fragment_after_restart_without_repeating_accepted_fragment(self):
-        self.add(long=True); self.schedule()
+        self.add_large_checklist(); self.schedule()
         self.deliver(0)  # Original SMTP report remains independent.
         self.deliver(4)
         self.assertEqual(self.notice()['part'],1)
@@ -189,7 +194,7 @@ class GroupReportsTest(unittest.TestCase):
         self.assertEqual(self.db.report('lihan','2026-10-10')['items'],[])
 
     def test_email_address_update_does_not_repeat_accepted_group_fragments(self):
-        self.add(long=True); self.schedule(); self.deliver(0); self.deliver(4)
+        self.add_large_checklist(); self.schedule(); self.deliver(0); self.deliver(4)
         accepted=self.group[0]['content']
         self.db.save_person('lihan','李涵','new@example.com')
         self.assertEqual(self.notice()['part'],1)
@@ -198,7 +203,7 @@ class GroupReportsTest(unittest.TestCase):
 
     # Ignoring global pacing would allow two accepted group fragments less than four seconds apart.
     def test_group_fragments_share_global_pacing_and_pause_controls(self):
-        self.add(long=True); self.schedule(); self.deliver(0)
+        self.add_large_checklist(); self.schedule(); self.deliver(0)
         self.deliver(3); self.assertEqual(self.group,[])
         self.deliver(4); self.assertEqual(len(self.group),1)
         self.deliver(7); self.assertEqual(len(self.group),1)
@@ -210,6 +215,7 @@ class GroupReportsTest(unittest.TestCase):
     # Regenerating from the now-advanced email window would erase remaining report contents.
     def test_owner_change_rebuilds_pending_group_after_smtp_sent_using_original_interval(self):
         self.add('转交业务',long=True); self.add('保留业务','partner@oneasy.cc',long=True)
+        self.add_large_checklist(18,'partner@oneasy.cc')
         self.schedule(); self.deliver(0); self.deliver(4)
         previous=self.group[0]['content'].split('\n',1)[0]
         self.db.save_person('other','同事','other@example.com',userid='Other')
@@ -218,7 +224,7 @@ class GroupReportsTest(unittest.TestCase):
         self.assertEqual(self.notice('report')['state'],'sent')
         self.assertEqual(self.notice()['part'],0)
         report=self.db.report('lihan','2026-10-09')
-        self.assertEqual([i['subject'] for i in report['items']],['保留业务'])
+        self.assertEqual({i['subject'] for i in report['items']},{'保留业务',*[f'分段复核{i:03d}' for i in range(18)]})
         self.assertEqual(report['since'],'2026-10-09T10:00:00+08:00')
         self.group.clear(); self.finish(200)
         rebuilt=''.join(part['content'].split('\n',1)[1] for part in self.group)
@@ -239,7 +245,7 @@ class GroupReportsTest(unittest.TestCase):
         self.assertTrue(self.group)
         self.assertTrue(all('mentioned_list' not in part for part in self.group))
         text=''.join(part['content'] for part in self.group)
-        for value in ('本期新增 0 封','2026-10-09','统计时段'):
+        for value in ('今日无待复核邮件','2026-10-09','18:00'):
             self.assertIn(value,text)
         for value in ('系统操作摘要','请在原邮箱处理业务','完整操作记录','以下邮件未即时提醒'):
             self.assertNotIn(value,text)

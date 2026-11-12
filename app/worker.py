@@ -7,7 +7,7 @@ import httpx
 from .core import Mail, Decision, classify, now, stamp
 from .alimail import AliMail
 from .ai import CloudAI
-from .notifications import item_text, report_text, message_parts, group_notice_text, group_system_text, group_report_parts, system_notice_text
+from .notifications import item_text, report_text, message_parts, group_notice_text, group_system_text, group_report_parts, group_review_items, group_review_report_parts, system_notice_text
 from .smtp import SMTPSender, error_text
 from .wecom import WeComSender
 from .recovery import diagnose
@@ -161,6 +161,10 @@ class Worker:
             if invalid or expired:
                 state='cancelled'
             else:
+                if (notice['kind']=='review' and self.wecom_sender and people[0]['userid']
+                        and notice['channel'] in {'','wecom'} and part==0
+                        and self.review_in_daily_group(notice,current)):
+                    return
                 try:
                     if not people: raise ValueError('unverified recipient')
                     identity=notice['id']
@@ -209,31 +213,63 @@ class Worker:
                 self.db.log('notification_failed' if error else 'notification_'+state,notice['item_id'],
                             {'notice':notice['id'],'channel':'smtp','part':part,'attempt':attempts},db=db)
 
+    def daily_review_rows(self,owner,report,current):
+        represented={item['id']:item.get('version',1) for item in group_review_items(report)
+                     if item['category'] in {'action','human'}}
+        rows=self.db.rows("SELECT n.* FROM notices n JOIN items i ON i.id=n.item_id WHERE n.kind='review' AND n.state='pending' AND n.owner=? AND n.part=0 AND n.channel IN ('','wecom') AND n.due<=? AND n.version=i.version AND i.is_test=0 AND EXISTS(SELECT 1 FROM mailbox_owners m WHERE m.account=i.account AND m.person_id=n.owner)",
+                          (owner,current.isoformat()))
+        return [row for row in rows if represented.get(row['item_id'])==row['version']]
+
+    def finish_daily_reviews(self,connection,rows,report_notice):
+        for row in rows:
+            connection.execute("UPDATE notices SET state='sent',channel='wecom',part=1,retry_at='',last_error='' WHERE id=? AND state='pending'",(row['id'],))
+            self.db.log('notification_merged',row['item_id'],{'notice':row['id'],'into':report_notice,'channel':'wecom'},db=connection)
+
+    def review_in_daily_group(self,notice,current):
+        reports=self.db.rows("SELECT n.*,r.payload AS report_payload FROM notices n JOIN reports r ON n.id='report_group:'||r.id WHERE n.owner=? AND n.state IN ('pending','sent') AND n.due<=? ORDER BY r.day DESC",(notice['owner'],current.isoformat()))
+        for group in reports:
+            report=json.loads(group['report_payload'])
+            covered=self.daily_review_rows(notice['owner'],report,current)
+            if not any(row['id']==notice['id'] for row in covered): continue
+            if group['state']=='sent':
+                with self.db.tx() as db: self.finish_daily_reviews(db,covered,group['id'])
+            elif group['retry_at'] and stamp(group['retry_at'])>current:
+                with self.db.tx() as db:
+                    db.execute('UPDATE notices SET retry_at=? WHERE id=?',(group['retry_at'],notice['id']))
+            else:
+                self.send_group_report(group,json.loads(group['payload']),current)
+            return True
+        return False
+
     def send_group_report(self,notice,payload,current):
         # A separate durable task keeps group retries independent of the email window.
         people=self.db.rows("SELECT * FROM people WHERE id=? AND active=1 AND EXISTS(SELECT 1 FROM mailbox_owners WHERE person_id=people.id)",(notice['owner'],))
         reason='group_disabled' if not self.wecom_sender else 'recipient_removed' if not people else 'member_id_missing' if not people[0]['userid'] else ''
-        part=notice['part']; attempts=notice['attempts']; error=''; state='pending'
+        part=notice['part']; attempts=notice['attempts']; error=''; state='pending'; covered=[]
         if reason:
             state='cancelled'
         else:
             try:
                 report=json.loads(self.db.rows('SELECT payload FROM reports WHERE id=?',(payload['report_id'],))[0]['payload'])
+                covered=self.daily_review_rows(notice['owner'],report,current)
                 revision=report.get('revision',0)
                 identity=notice['id']+':'+str(revision)
                 owner_name=report.get('owner_name',people[0]['name'])
-                if part==0 and payload.get('format')!='review-status':
-                    payload={**payload,'format':'review-status'}
+                if part==0 and (payload.get('format')!='brief-review' or payload.get('owner_name')!=people[0]['name']):
+                    payload={**payload,'format':'brief-review','owner_name':people[0]['name']}
                     with self.db.tx() as db:
                         db.execute('UPDATE notices SET payload=? WHERE id=?',(json.dumps(payload),notice['id']))
-                if payload.get('format') in {'review-status','mail-only','readable'}:
+                if payload.get('format')=='brief-review':
+                    parts=group_review_report_parts(report,payload.get('owner_name',owner_name))
+                elif payload.get('format') in {'review-status','mail-only','readable'}:
                     parts=group_report_parts(report,owner_name,legacy=payload['format']=='readable',review_status=payload['format']=='review-status')
                 else:
                     # Finish pre-upgrade fragments using their original boundaries.
                     parts=message_parts('负责人：'+owner_name+'\n'+report_text(report,legacy=True),identity,limit=2048)
                 self.db.set('last_send',current.timestamp())
                 attempts+=1
-                userids=[people[0]['userid']] if any(i['category'] in {'action','info','human'} for i in report.get('notification_items',report['items'])) else []
+                mention_items=group_review_items(report) if payload.get('format')=='brief-review' else report.get('notification_items',report['items'])
+                userids=[people[0]['userid']] if any(i['category'] in {'action','info','human'} for i in mention_items) else []
                 self.db.log('notification_attempt',detail={'notice':notice['id'],'channel':'wecom','part':part+1,'total':len(parts),'revision':revision,'userid':people[0]['userid'] if userids else ''})
                 self.wecom_sender.send_text(parts[part],userids,identity+':'+str(part))
                 part+=1
@@ -246,6 +282,11 @@ class Worker:
             db.execute("UPDATE notices SET state=?,channel='wecom',part=?,attempts=?,retry_at=?,last_error=? WHERE id=?",(state,part,attempts,retry.isoformat(),error,notice['id']))
             self.db.log('notification_failed' if error else 'notification_'+state,
                         detail={'notice':notice['id'],'channel':'wecom','part':part,'attempt':attempts,'reason':reason},db=db)
+            if state=='sent': self.finish_daily_reviews(db,covered,notice['id'])
+            elif state=='pending' and error:
+                for row in covered:
+                    db.execute("UPDATE notices SET channel='smtp',retry_at=?,last_error='' WHERE id=?",(current.isoformat(),row['id']))
+                    self.db.log('notification_fallback',row['item_id'],{'notice':row['id'],'from':'wecom','to':'smtp','reason':'daily_group_send_failed'},db=db)
 
     def alert(self,code,account='',failure=None,record=True):
         detail={'account':account}
