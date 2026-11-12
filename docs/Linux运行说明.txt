@@ -1,0 +1,75 @@
+Oneasy 邮件助手 · Linux运行资料
+整理日期：2026-11-12。基于现有源码入口，未修改本地后台或执行云端切换。
+
+一、Python及基础环境
+当前已验证的Windows运行基线为CPython 3.13.16（64位）；Linux环境沿用3.13.16准备，并进行现场验收。
+可用的官方基础镜像标签：python:3.13.16-slim-bookworm。已核对该标签包含linux/amd64和linux/arm64；本次未实际拉取、构建或启动该镜像。
+文中的python指目标环境内的3.13.16解释器，先执行python --version核对。基础环境应包含pip、Python标准库sqlite3及ssl模块、CA根证书。使用上述官方镜像时，不需要安装Windows的pywin32、桌面浏览器或图形界面。
+不需要单独部署MySQL、Redis、消息队列、Node.js、GPU或本地大模型。
+
+二、Linux依赖安装（在项目根目录执行）
+  python -m pip install --no-cache-dir -r requirements-linux.txt
+依赖已按当前仓库固定：
+  fastapi==0.141.1
+  uvicorn==0.52.1
+  httpx==0.28.1
+  certifi==2026.7.22
+  cryptography==50.0.0
+  pypdf==6.19.0
+requirements-linux.txt另外固定了当前已验证运行环境的传递依赖版本，避免构建时自动升级Starlette、Pydantic等间接依赖。它是版本冻结清单，不含轮子哈希校验；Linux轮子解析不等于容器实机验收。
+原requirements.txt也有pywin32的Windows条件，但本文件已明确移除该项。
+如使用无可用二进制轮子的架构/基础系统，需重新核验依赖构建条件；不将Windows运行环境目录复制进Linux镜像。
+
+三、启动命令
+工作目录必须为项目根目录，即app目录、requirements-linux.txt所在位置。
+启动前先挂载准备好的Linux专用数据目录到/data，然后以前台单进程运行：
+  python -u -m app run --data /data --port 8765
+容器CMD可使用相同的exec形式：
+  ["python", "-u", "-m", "app", "run", "--data", "/data", "--port", "8765"]
+不要使用demo命令，不要开启多个worker、自动热重载或多个监控副本。
+仅启动空数据目录会生成默认配置，但不等于已接通邮箱或启用监控。
+
+四、现有参数及可配置项
+启动命令现有业务参数：
+  --data：数据目录；原生默认./data，容器统一使用/data。
+  --port：管理HTTP端口；默认8765，与SMTP端口无关。
+-u是Python标准参数，让控制台输出不缓冲。
+目前没有--host、--workers、--poll-interval等应用启动参数，也不自动读取.env或API_KEY/SMTP类环境变量。
+--file用于backup/restore/export等维护子命令，不是run启动时需要的参数。
+
+由已有加密配置维护的内容（实际值另行私密交付，本文和源码包不含密钥）：
+  alimail.client_id / client_secret：阿里邮箱API应用。
+  ai.base_url / model / api_key：千问兼容API、模型、密钥。
+  smtp.host / port / security / address / password：提醒发件箱及授权码。
+  wecom.enabled / webhook：群机器人开关与地址。
+  backup_dir：备份路径；迁移时需改为Linux路径，默认使用/data/backups。
+负责人姓名、接收邮箱、企业微信成员账号、邮箱归属等保存在main.db，可通过已有管理接口维护，不是启动参数。
+扫描每轮结束后等待约60秒、每天18:00汇总以及业务时区UTC+8（北京时间）目前由代码确定，不能靠环境变量改变。TZ可统一容器日志显示，但不改变上述业务时区规则。
+
+五、持久化数据及密钥（启动前准备）
+/data需由运行用户可读写，作为持久化卷保留；包括main.db（以及SQLite WAL相关文件）、config.json、config.key、备份及归档。
+Linux读取Fernet格式的config.json及配套config.key。Windows原电脑的config.json使用机器绑定DPAPI，不能直接复制到Linux使用。
+当前Windows一键部署包及其导入入口也不能直接作为Linux初始化工具使用。
+正式切换时由交付侧生成Linux专用配置和必要运行状态，密钥无需运维逐项重新填写；在此之前保持本地监控。
+准备好的数据还必须包含原启用时间、负责人、去重及必要提醒状态，且确认监控未暂停；不能通过重置启用时间或临时点首次启用来绕过迁移。
+配置与密钥通过运行时私密挂载提供，不写进Dockerfile、镜像层或公共代码仓；同时备份config.json和config.key。
+
+六、网络与检查
+允许出站：alimail-cn.aliyuncs.com:443、dashscope.aliyuncs.com:443、qyapi.weixin.qq.com:443；当前SMTP为s211w.chinaemail.cn:465（SSL）。附件域名按实际受信API下载范围放行。
+保持DNS、证书和系统时钟正常。现有HTTP客户端不读取环境代理，仅设置HTTP_PROXY/HTTPS_PROXY不能保证生效，必须代理出网时先告知研发。
+管理服务固定监听127.0.0.1，且有本机访问检查；没有--host参数。后台监控不需要对外发布HTTP端口。
+容器健康检查应在容器内执行，例如：
+  python -c "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:8765/api/health', timeout=5).read().decode())"
+只做-p端口映射不能让当前管理页面从宿主机正常访问。需要远程管理页面时，应另外设计受控访问，不直接改为无认证的公网管理站。
+/api/health只代表进程存活；还需在容器内查看/api/state，核验activated非空、paused=false、配置就绪及六邮箱last_scans持续更新，并在约定范围验收实际通知。
+容器平台负责自动重启与持久化卷。停机/断网期间无法扫描，正式切换仅允许一个监控实例，避免重复提醒。
+
+范围说明
+本资料提供现有代码的运行环境、真实CLI命令与参数边界；不是已完成Linux容器化或验收的声明。
+当前本机Docker引擎未运行，本次不启动Docker服务、不构建镜像、不注入生产密钥、不发测试群消息、不停用本地监控。
+正式Linux初始化数据、镜像构建与容器现场验收仍需按运维平台落实。
+
+官方参考（版本和基础镜像）：
+https://www.python.org/downloads/release/python-31316/
+https://github.com/docker-library/python
+https://hub.docker.com/_/python
